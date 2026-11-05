@@ -1,8 +1,7 @@
-# 용접선 위의 기록
+# IRC 2026 피지컬 AI 자율용접
 
-IRC 2026 피지컬 AI 자율용접 팀의 트러블슈팅 기록 사이트입니다.
-
-- 사이트: https://gawbi.github.io/irc2026-troubleshooting/
+- 대회 발표 (웹 슬라이드): https://gawbi.github.io/irc2026-troubleshooting/ (방향키, 스페이스, 스와이프로 넘김)
+- 트러블슈팅 기록: https://gawbi.github.io/irc2026-troubleshooting/log.html
 - 제보: [이슈 열기](https://github.com/gawbi/irc2026-troubleshooting/issues/new?template=troubleshooting.yml) (증상, 원인, 조치, 검증, 남은 일)
 
 ## 기록 추가하는 법

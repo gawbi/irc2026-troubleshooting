@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>용접선 위의 기록 | IRC 2026 자율용접 트러블슈팅</title>
+<meta name="description" content="IRC 2026 피지컬 AI 자율용접 팀이 엔드이펙터, 레이저, 학습 구조를 만들며 겪은 문제와 해결 기록">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --steel:#E9ECEC; --plate:#F6F7F7; --ink:#1C2329; --muted:#56616A; --line:#C7CED1;
+  --straw:#C99A2E; --bronze:#A3602F; --violet:#6A4A8C; --blue:#2F6BA8;
+  --radius-s:6px; --radius-l:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;overflow-x:hidden;background:var(--steel);color:var(--ink);font-family:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--blue)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--violet);outline-offset:3px;border-radius:var(--radius-s)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* 첫 화면: 비드 하나가 곧 문제 하나 */
+header{padding:72px 0 40px}
+h1{font-size:clamp(40px,6.4vw,76px);line-height:1.08;font-weight:800;letter-spacing:-.035em;margin:0;max-width:12ch}
+.lead{max-width:60ch;color:var(--muted);font-size:19px;margin:22px 0 0}
+.seam{margin:44px 0 0;position:relative}
+.seam svg{width:100%;height:auto;display:block;overflow:visible}
+.bead{cursor:pointer;transition:transform .2s ease}
+.bead:hover,.bead:focus-visible{transform:translateY(-4px)}
+.bead:focus-visible{outline:none}
+.bead:focus-visible .bead-body{stroke:var(--ink);stroke-width:2.5}
+.seam-caption{display:flex;flex-wrap:wrap;gap:18px 28px;margin-top:18px;font-size:15px;color:var(--muted)}
+.swatch{display:inline-flex;align-items:center;gap:8px}
+.swatch i{width:22px;height:12px;border-radius:12px;display:inline-block}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:14px;line-height:1.45;padding:8px 12px;border-radius:var(--radius-s);max-width:280px;transform:translate(-50%,-100%);opacity:0;transition:opacity .15s}
+.tip.on{opacity:1}
+
+/* 제보 안내 */
+.ask{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;background:var(--plate);border-radius:var(--radius-l);padding:28px 32px;margin:8px 0 56px}
+.ask h2{font-size:24px;margin:0 0 6px;letter-spacing:-.02em}
+.ask p{margin:0;color:var(--muted);max-width:58ch}
+.btn{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:999px;white-space:nowrap}
+.btn:hover{background:var(--violet)}
+
+/* 목록 */
+.toolbar{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;margin-bottom:20px}
+.toolbar h2{font-size:28px;margin:0 auto 0 0;letter-spacing:-.02em}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:15px;border:1.5px solid var(--line);background:transparent;color:var(--ink);padding:6px 14px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.list{list-style:none;margin:0;padding:0;border-top:1.5px solid var(--ink)}
+.item{border-bottom:1px solid var(--line)}
+.item summary{list-style:none;display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:baseline;padding:20px 4px;cursor:pointer}
+.item summary::-webkit-details-marker{display:none}
+.item .code{font-weight:800;font-size:20px;letter-spacing:-.02em}
+.item .t{font-size:20px;font-weight:600;letter-spacing:-.015em;overflow-wrap:anywhere}
+.item .meta{font-size:14px;color:var(--muted);display:block;font-weight:400;margin-top:2px}
+.state{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:600;white-space:nowrap}
+.state i{width:12px;height:12px;border-radius:50%}
+.body{display:grid;grid-template-columns:72px 1fr;gap:16px;padding:0 4px 28px}
+.steps{grid-column:2;display:grid;gap:14px;max-width:72ch}
+.step h3{margin:0;font-size:15px;color:var(--muted);font-weight:700}
+.step p{margin:2px 0 0}
+figure{grid-column:2;margin:8px 0 0}
+figure img{max-width:100%;border-radius:var(--radius-l);background:#fff;display:block}
+figcaption{font-size:14px;color:var(--muted);margin-top:8px}
+.empty{padding:28px 4px;color:var(--muted)}
+
+/* 팀원 제보 */
+.reports{margin:64px 0}
+.reports h2{font-size:28px;margin:0 0 6px;letter-spacing:-.02em}
+.reports > p{color:var(--muted);margin:0 0 18px;max-width:62ch}
+.report{display:grid;grid-template-columns:1fr auto;gap:16px;padding:14px 4px;border-bottom:1px solid var(--line)}
+.report a{font-weight:600;text-decoration:none;color:var(--ink)}
+.report a:hover{color:var(--blue);text-decoration:underline}
+.report span{color:var(--muted);font-size:14px}
+
+footer{padding:40px 0 64px;color:var(--muted);font-size:15px;border-top:1px solid var(--line)}
+footer p{max-width:70ch;margin:0 0 8px}
+
+@media (max-width:720px){
+  header{padding:48px 0 28px}
+  .ask{grid-template-columns:1fr;padding:24px}
+  .item summary{grid-template-columns:48px 1fr;}
+  .item summary .state{grid-column:2}
+  .body{grid-template-columns:1fr}
+  .steps,figure{grid-column:1}
+}
+@media (prefers-color-scheme:dark){
+  :root{--steel:#1B2126;--plate:#232A30;--ink:#ECEFF0;--muted:#A3ACB3;--line:#38424A;--blue:#6FA3DA}
+  .btn{color:#1B2126}.btn:hover{color:#fff}
+  .chip[aria-pressed="true"]{color:#1B2126}
+  .tip{background:#ECEFF0;color:#1B2126}
+  figure img{background:#fff}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>용접선 위의 기록</h1>
+    <p class="lead">IRC 2026 피지컬 AI 자율용접 팀이 축소 OPTi3 토치, 레이저 가상용접, 학습 구조를 만들며 부딪힌 문제를 모았습니다. 아래 비드 한 마디가 문제 하나이고, 색은 용접부가 열에 변하는 순서대로 상태를 나타냅니다.</p>
+    <div class="seam" id="seam">
+      <div class="tip" id="tip" role="status"></div>
+    </div>
+    <div class="seam-caption" id="legend"></div>
+  </header>
+
+  <section class="ask" aria-labelledby="ask-title">
+    <div>
+      <h2 id="ask-title">겪은 문제가 있으면 남겨 주세요</h2>
+      <p>증상, 원인, 조치, 검증, 남은 일 다섯 칸만 채우면 됩니다. 원인을 아직 몰라도 괜찮습니다. 올라온 제보는 아래 '팀원 제보'에 바로 보이고, 정리되면 기록 목록으로 옮깁니다.</p>
+    </div>
+    <a class="btn" id="new-issue" href="https://github.com/gawbi/irc2026-troubleshooting/issues/new?template=troubleshooting.yml">문제 제보하기</a>
+  </section>
+
+  <section aria-labelledby="list-title">
+    <div class="toolbar">
+      <h2 id="list-title">기록</h2>
+      <div class="chips" role="group" aria-label="분야로 거르기" id="area-chips"></div>
+      <div class="chips" role="group" aria-label="상태로 거르기" id="state-chips"></div>
+    </div>
+    <ol class="list" id="list"></ol>
+  </section>
+
+  <section class="reports" aria-labelledby="rep-title">
+    <h2 id="rep-title">팀원 제보</h2>
+    <p>깃허브 이슈로 올라온 제보입니다. 제목을 누르면 내용과 댓글을 볼 수 있습니다.</p>
+    <div id="reports"><p class="empty">제보를 불러오는 중입니다.</p></div>
+  </section>
+
+  <footer>
+    <p>시뮬레이션, 에이전트, 비전 쪽 작업 기록은 팀 저장소의 docs/WORKLOG.md에 시간순으로 있습니다. 같은 내용은 팀 저장소 트러블슈팅 폴더에도 정리되어 있습니다.</p>
+    <p>기록을 고치려면 이 저장소의 data/entries.json을 수정해 주세요. 발표 자료는 <a href="./">첫 화면</a>에 있습니다.</p>
+  </footer>
+</div>
+
+<script>
+const REPO = 'gawbi/irc2026-troubleshooting';
+const STATES = [
+  {name:'확인 필요', color:'var(--straw)', hint:'짚색'},
+  {name:'보류', color:'var(--bronze)', hint:'청동색'},
+  {name:'진행 중', color:'var(--violet)', hint:'보라'},
+  {name:'해결', color:'var(--blue)', hint:'파랑'}
+];
+const colorOf = s => (STATES.find(x => x.name === s) || STATES[0]).color;
+const filter = {area:'전체', state:'전체'};
+let entries = [];
+
+function el(tag, attrs = {}, ...kids){
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') n.className = v; else if (k === 'text') n.textContent = v; else n.setAttribute(k, v);
+  }
+  kids.flat().forEach(k => k && n.append(k));
+  return n;
+}
+
+function drawSeam(){
+  const box = document.getElementById('seam');
+  const NS = 'http://www.w3.org/2000/svg';
+  const n = entries.length, W = 1040, H = 120, x0 = 30, step = (W - 2 * x0) / n;
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', `문제 ${n}건을 비드 마디로 나타낸 용접선`);
+  const plate = document.createElementNS(NS, 'path');
+  plate.setAttribute('d', `M0 ${H/2+18} H${W}`);
+  plate.setAttribute('stroke', 'var(--line)'); plate.setAttribute('stroke-width', '2');
+  svg.append(plate);
+  const tip = document.getElementById('tip');
+  entries.forEach((e, i) => {
+    const cx = x0 + step * (i + .5), cy = H / 2 + Math.sin(i * .9) * 3;
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'bead'); g.setAttribute('tabindex', '0'); g.setAttribute('role', 'link');
+    g.setAttribute('aria-label', `${e.id} ${e.title}, ${e.status}`);
+    // 비드 마디: 앞쪽이 둥글고 뒤로 물결 자국이 남는 반달 모양
+    const body = document.createElementNS(NS, 'path');
+    const rx = step * .9, ry = 22;
+    body.setAttribute('d', `M${cx - rx} ${cy} Q${cx - rx * .2} ${cy - ry * 1.5} ${cx + rx * .55} ${cy - ry * .55} Q${cx + rx} ${cy} ${cx + rx * .55} ${cy + ry * .55} Q${cx - rx * .2} ${cy + ry * 1.5} ${cx - rx} ${cy} Z`);
+    body.setAttribute('class', 'bead-body');
+    body.setAttribute('fill', colorOf(e.status)); body.setAttribute('stroke', 'rgba(0,0,0,.18)'); body.setAttribute('stroke-width', '1');
+    g.append(body);
+    for (let k = 1; k <= 2; k++) {
+      const r = document.createElementNS(NS, 'path');
+      const xx = cx + rx * (.1 + k * .17);
+      r.setAttribute('d', `M${xx} ${cy - ry * .62} Q${xx + 7} ${cy} ${xx} ${cy + ry * .62}`);
+      r.setAttribute('fill', 'none'); r.setAttribute('stroke', 'rgba(255,255,255,.45)'); r.setAttribute('stroke-width', '1.4');
+      g.append(r);
+    }
+    const label = document.createElementNS(NS, 'text');
+    label.setAttribute('x', cx); label.setAttribute('y', H - 4); label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('font-size', '13'); label.setAttribute('font-weight', '700'); label.setAttribute('fill', 'var(--muted)');
+    label.textContent = e.id;
+    g.append(label);
+    const show = () => {
+      const b = box.getBoundingClientRect(), r = g.getBoundingClientRect();
+      tip.textContent = `${e.id} ${e.title} (${e.status})`;
+      tip.style.left = (r.left + r.width / 2 - b.left) + 'px'; tip.style.top = (r.top - b.top - 6) + 'px';
+      tip.classList.add('on');
+    };
+    const hide = () => tip.classList.remove('on');
+    const open = () => {
+      filter.area = '전체'; filter.state = '전체'; renderChips(); renderList();
+      const d = document.getElementById('e-' + e.id); d.open = true; d.scrollIntoView({block:'start'});
+      d.querySelector('summary').focus({preventScroll:true});
+    };
+    g.addEventListener('mouseenter', show); g.addEventListener('mouseleave', hide);
+    g.addEventListener('focus', show); g.addEventListener('blur', hide);
+    g.addEventListener('click', open);
+    g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); open(); } });
+    svg.append(g);
+  });
+  box.prepend(svg);
+  // 첫 화면에서 한 번만, 비드가 왼쪽부터 차례로 쌓인다
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    svg.querySelectorAll('.bead').forEach((g, i) => {
+      g.animate([{opacity:0, transform:'translateX(-10px)'}, {opacity:1, transform:'none'}], {duration:260, delay:120 + i * 70, easing:'ease-out', fill:'backwards'});
+    });
+  }
+  const legend = document.getElementById('legend');
+  STATES.forEach(s => {
+    const c = entries.filter(e => e.status === s.name).length;
+    legend.append(el('span', {class:'swatch'}, el('i', {style:`background:${s.color}`}), `${s.name} ${c}건`));
+  });
+}
+
+function renderChips(){
+  const make = (box, key, values) => {
+    box.replaceChildren(...['전체', ...values].map(v => {
+      const b = el('button', {class:'chip', type:'button', 'aria-pressed': String(filter[key] === v), text:v});
+      b.addEventListener('click', () => { filter[key] = v; renderChips(); renderList(); });
+      return b;
+    }));
+  };
+  make(document.getElementById('area-chips'), 'area', [...new Set(entries.map(e => e.area))]);
+  make(document.getElementById('state-chips'), 'state', STATES.map(s => s.name).filter(n => entries.some(e => e.status === n)));
+}
+
+function renderList(){
+  const list = document.getElementById('list');
+  const shown = entries.filter(e => (filter.area === '전체' || e.area === filter.area) && (filter.state === '전체' || e.status === filter.state));
+  if (!shown.length) { list.replaceChildren(el('li', {class:'empty', text:'이 조건에 맞는 기록이 없습니다. 거르기를 풀어 보세요.'})); return; }
+  list.replaceChildren(...shown.map(e => {
+    const steps = [['증상', e.symptom], ['원인', e.cause], ['조치', e.fix], ['검증', e.check], ['남은 일', e.next]]
+      .map(([h, p]) => el('div', {class:'step'}, el('h3', {text:h}), el('p', {text:p})));
+    const body = el('div', {class:'body'}, el('div', {class:'steps'}, steps));
+    if (e.image) body.append(el('figure', {}, el('img', {src:e.image, alt:e.imageAlt || '', loading:'lazy'}), el('figcaption', {text:e.imageAlt || ''})));
+    const det = el('details', {id:'e-' + e.id},
+      el('summary', {},
+        el('span', {class:'code', text:e.id}),
+        el('span', {class:'t'}, e.title, el('span', {class:'meta', text:e.area})),
+        el('span', {class:'state'}, el('i', {style:`background:${colorOf(e.status)}`}), e.status)),
+      body);
+    return el('li', {class:'item'}, det);
+  }));
+}
+
+async function loadReports(){
+  const box = document.getElementById('reports');
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/issues?labels=troubleshooting&state=all&per_page=50`);
+    if (!r.ok) throw new Error(r.status);
+    const items = (await r.json()).filter(i => !i.pull_request);
+    if (!items.length) { box.replaceChildren(el('p', {class:'empty', text:'아직 올라온 제보가 없습니다. 위의 문제 제보하기로 첫 기록을 남겨 주세요.'})); return; }
+    box.replaceChildren(...items.map(i => el('div', {class:'report'},
+      el('a', {href:i.html_url, text:`#${i.number} ${i.title}`}),
+      el('span', {text:`${i.user.login}, ${new Date(i.created_at).toLocaleDateString('ko-KR')}${i.state === 'closed' ? ', 정리됨' : ''}`}))));
+  } catch (err) {
+    box.replaceChildren(el('p', {class:'empty'}, '제보 목록을 불러오지 못했습니다. ', el('a', {href:`https://github.com/${REPO}/issues`, text:'깃허브 이슈에서 직접 보기'})));
+  }
+}
+
+fetch('data/entries.json').then(r => r.json()).then(data => {
+  entries = data; drawSeam(); renderChips(); renderList();
+}).catch(() => {
+  document.getElementById('list').replaceChildren(el('li', {class:'empty', text:'기록 파일(data/entries.json)을 읽지 못했습니다. 로컬에서는 간단한 웹 서버로 여세요.'}));
+});
+loadReports();
+</script>
+</body>
+</html>

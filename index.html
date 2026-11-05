@@ -2,282 +2,603 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>용접선 위의 기록 | IRC 2026 자율용접 트러블슈팅</title>
-<meta name="description" content="IRC 2026 피지컬 AI 자율용접 팀이 엔드이펙터, 레이저, 학습 구조를 만들며 겪은 문제와 해결 기록">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>숙련 용접사의 손기술을, 7축 로봇이 레이저로 잇는다 | IRC 2026</title>
+<meta name="description" content="2026 IRC 지능로봇대회 매니퓰레이터 종목 피지컬 AI 자율용접 매니퓰레이터 개발 발표">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ===========================================
+   THEME: 현장 다큐
+   검은 강철 바탕, 아크 주황 하나, 보호가스 아크의 푸른빛 하나.
+   반복 모티프는 레이저가 긋는 한 줄인 주황 용접선.
+   =========================================== */
 :root{
-  --steel:#E9ECEC; --plate:#F6F7F7; --ink:#1C2329; --muted:#56616A; --line:#C7CED1;
-  --straw:#C99A2E; --bronze:#A3602F; --violet:#6A4A8C; --blue:#2F6BA8;
-  --radius-s:6px; --radius-l:14px;
+  --stage-bg:#090c0e; --slide-bg:#0E1114;
+  --panel:#1A1F24; --ink:#F2EFEA; --body:#D9D6D0; --muted:#8C949C; --rule:#3A424A;
+  --arc:#FF7A1A; --gas:#4FA3C7;
+  --font:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
 }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-body{margin:0;overflow-x:hidden;background:var(--steel);color:var(--ink);font-family:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased}
-a{color:var(--blue)}
-a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--violet);outline-offset:3px;border-radius:var(--radius-s)}
-.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+*{margin:0;padding:0;box-sizing:border-box}
 
-/* 첫 화면: 비드 하나가 곧 문제 하나 */
-header{padding:72px 0 40px}
-h1{font-size:clamp(40px,6.4vw,76px);line-height:1.08;font-weight:800;letter-spacing:-.035em;margin:0;max-width:12ch}
-.lead{max-width:60ch;color:var(--muted);font-size:19px;margin:22px 0 0}
-.seam{margin:44px 0 0;position:relative}
-.seam svg{width:100%;height:auto;display:block;overflow:visible}
-.bead{cursor:pointer;transition:transform .2s ease}
-.bead:hover,.bead:focus-visible{transform:translateY(-4px)}
-.bead:focus-visible{outline:none}
-.bead:focus-visible .bead-body{stroke:var(--ink);stroke-width:2.5}
-.seam-caption{display:flex;flex-wrap:wrap;gap:18px 28px;margin-top:18px;font-size:15px;color:var(--muted)}
-.swatch{display:inline-flex;align-items:center;gap:8px}
-.swatch i{width:22px;height:12px;border-radius:12px;display:inline-block}
-.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:14px;line-height:1.45;padding:8px 12px;border-radius:var(--radius-s);max-width:280px;transform:translate(-50%,-100%);opacity:0;transition:opacity .15s}
-.tip.on{opacity:1}
-
-/* 제보 안내 */
-.ask{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;background:var(--plate);border-radius:var(--radius-l);padding:28px 32px;margin:8px 0 56px}
-.ask h2{font-size:24px;margin:0 0 6px;letter-spacing:-.02em}
-.ask p{margin:0;color:var(--muted);max-width:58ch}
-.btn{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:999px;white-space:nowrap}
-.btn:hover{background:var(--violet)}
-
-/* 목록 */
-.toolbar{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;margin-bottom:20px}
-.toolbar h2{font-size:28px;margin:0 auto 0 0;letter-spacing:-.02em}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{font:inherit;font-size:15px;border:1.5px solid var(--line);background:transparent;color:var(--ink);padding:6px 14px;border-radius:999px;cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
-.list{list-style:none;margin:0;padding:0;border-top:1.5px solid var(--ink)}
-.item{border-bottom:1px solid var(--line)}
-.item summary{list-style:none;display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:baseline;padding:20px 4px;cursor:pointer}
-.item summary::-webkit-details-marker{display:none}
-.item .code{font-weight:800;font-size:20px;letter-spacing:-.02em}
-.item .t{font-size:20px;font-weight:600;letter-spacing:-.015em;overflow-wrap:anywhere}
-.item .meta{font-size:14px;color:var(--muted);display:block;font-weight:400;margin-top:2px}
-.state{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:600;white-space:nowrap}
-.state i{width:12px;height:12px;border-radius:50%}
-.body{display:grid;grid-template-columns:72px 1fr;gap:16px;padding:0 4px 28px}
-.steps{grid-column:2;display:grid;gap:14px;max-width:72ch}
-.step h3{margin:0;font-size:15px;color:var(--muted);font-weight:700}
-.step p{margin:2px 0 0}
-figure{grid-column:2;margin:8px 0 0}
-figure img{max-width:100%;border-radius:var(--radius-l);background:#fff;display:block}
-figcaption{font-size:14px;color:var(--muted);margin-top:8px}
-.empty{padding:28px 4px;color:var(--muted)}
-
-/* 팀원 제보 */
-.reports{margin:64px 0}
-.reports h2{font-size:28px;margin:0 0 6px;letter-spacing:-.02em}
-.reports > p{color:var(--muted);margin:0 0 18px;max-width:62ch}
-.report{display:grid;grid-template-columns:1fr auto;gap:16px;padding:14px 4px;border-bottom:1px solid var(--line)}
-.report a{font-weight:600;text-decoration:none;color:var(--ink)}
-.report a:hover{color:var(--blue);text-decoration:underline}
-.report span{color:var(--muted);font-size:14px}
-
-footer{padding:40px 0 64px;color:var(--muted);font-size:15px;border-top:1px solid var(--line)}
-footer p{max-width:70ch;margin:0 0 8px}
-
-@media (max-width:720px){
-  header{padding:48px 0 28px}
-  .ask{grid-template-columns:1fr;padding:24px}
-  .item summary{grid-template-columns:48px 1fr;}
-  .item summary .state{grid-column:2}
-  .body{grid-template-columns:1fr}
-  .steps,figure{grid-column:1}
+/* ===========================================
+   FIXED 16:9 STAGE (viewport-base.css 전문)
+   =========================================== */
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg,#000)}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg,#000)}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--slide-bg,#fff)}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg,#fff)}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1}
+img,video,canvas,svg{max-width:100%;max-height:100%}
+.deck-controls{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000}
+@media print{
+  html,body{width:1920px;height:auto;overflow:visible;background:#fff}
+  .deck-viewport{position:static;overflow:visible;background:#fff}
+  .deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none}
+  .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always}
+  .slide:last-child{break-after:auto;page-break-after:auto}
+  .deck-controls{display:none!important}
 }
-@media (prefers-color-scheme:dark){
-  :root{--steel:#1B2126;--plate:#232A30;--ink:#ECEFF0;--muted:#A3ACB3;--line:#38424A;--blue:#6FA3DA}
-  .btn{color:#1B2126}.btn:hover{color:#fff}
-  .chip[aria-pressed="true"]{color:#1B2126}
-  .tip{background:#ECEFF0;color:#1B2126}
-  figure img{background:#fff}
-}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important}}
+
+/* ===========================================
+   SHARED SLIDE PARTS
+   =========================================== */
+.slide{font-family:var(--font);color:var(--body);font-size:30px;line-height:1.55}
+.pad{position:absolute;inset:96px 120px 88px 120px}
+.mark{position:absolute;left:120px;top:58px;font-size:20px;color:var(--muted);letter-spacing:.02em}
+.mark b{color:var(--arc);font-weight:600}
+.num{position:absolute;right:120px;bottom:44px;font-size:20px;color:var(--muted)}
+.src{position:absolute;left:120px;bottom:44px;font-size:18px;color:var(--muted);max-width:1500px}
+h1,h2{color:var(--ink);font-weight:700;letter-spacing:-.025em;line-height:1.22}
+h2{font-size:62px;margin-bottom:40px;max-width:1500px}
+.hi{color:var(--arc)}
+.gas{color:var(--gas)}
+.weld{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--arc),rgba(255,122,26,0));transform-origin:left}
+.photo{background-size:cover;background-position:center;background-repeat:no-repeat}
+video{display:block;object-fit:cover;background:#000}
+
+/* 화면이 들어올 때 한 번만 차례로 올라온다 */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.slide.visible .reveal{opacity:1;transform:none}
+.slide.visible .r2{transition-delay:.12s}.slide.visible .r3{transition-delay:.24s}.slide.visible .r4{transition-delay:.36s}.slide.visible .r5{transition-delay:.48s}
+.slide.visible .weld.reveal{transform:none}
+.weld.reveal{transform:scaleX(0);opacity:1;transition:transform 1.2s var(--ease)}
+
+/* === 01 COVER === */
+.cover .bg{position:absolute;inset:0}
+.cover .scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(14,17,20,.95) 0%,rgba(14,17,20,.72) 45%,rgba(14,17,20,0) 100%)}
+.cover .kick{position:absolute;left:120px;top:330px;font-size:28px;font-weight:600;color:var(--arc)}
+.cover h1{position:absolute;left:120px;top:390px;font-size:104px;width:1300px}
+.cover .weld{position:absolute;left:120px;top:675px;width:700px}
+.cover .sub{position:absolute;left:120px;top:715px;font-size:40px;color:var(--body)}
+.cover .meta{position:absolute;left:120px;top:800px;font-size:28px;color:var(--body)}
+.cover .meta span{color:var(--muted);margin:0 18px}
+
+/* === 02 SKILL GAP === */
+.gap .ph{position:absolute;left:0;top:0;width:800px;height:1080px}
+.gap .fade{position:absolute;left:620px;top:0;width:180px;height:1080px;background:linear-gradient(90deg,rgba(14,17,20,0),var(--slide-bg))}
+.gap .txt{position:absolute;left:880px;top:150px;width:920px}
+.gap .big{font-size:220px;font-weight:700;color:var(--arc);line-height:1;letter-spacing:-.04em;margin-top:30px}
+.gap .big small{font-size:72px;margin-left:10px;color:var(--ink)}
+.gap .lbl{font-size:30px;margin:10px 0 44px}
+.gap .pts p{border-top:1px solid var(--rule);padding:22px 0;font-size:30px}
+.gap .pts b{color:var(--ink);font-weight:600}
+.gap .mark,.gap .src{left:880px}
+
+/* === 03 OUTDOOR === */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:60px}
+.duo .ph{height:430px;border-radius:6px}
+.duo h3{font-size:24px;font-weight:600;margin:28px 0 10px}
+.duo p{font-size:32px;color:var(--body)}
+.duo b{color:var(--ink);font-weight:600}
+.take{margin-top:54px;font-size:40px;color:var(--ink)}
+
+/* === 04 REAL WELD === */
+.rail{position:relative;height:60px;margin:10px 0 24px}
+.rail .line{position:absolute;left:0;right:0;top:29px;height:3px;background:var(--arc)}
+.rail .dot{position:absolute;top:10px;width:42px;height:42px;border-radius:50%;border:3px solid var(--arc);background:var(--slide-bg);color:var(--arc);font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.rail .dot.on{background:var(--arc);color:var(--slide-bg)}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+.strip .ph{height:330px;border-radius:6px}
+.strip h3{font-size:38px;color:var(--ink);margin:26px 0 6px}
+.strip p{font-size:26px;color:var(--muted)}
+.strip .on h3{color:var(--arc)}
+
+/* === 05 POSCO / 06 GOAL: video + side text === */
+.vside{display:grid;gap:56px;height:760px}
+.vside video{width:100%;height:100%;border-radius:6px}
+.side h3{font-size:24px;font-weight:600;color:var(--gas);margin-bottom:12px}
+.side p{font-size:32px;margin-bottom:40px}
+.side b{color:var(--ink);font-weight:600}
+.cmp{width:100%;border-collapse:collapse;font-size:30px}
+.cmp th{text-align:left;font-size:24px;font-weight:600;color:var(--muted);padding:0 0 14px}
+.cmp th.us{color:var(--arc)}
+.cmp td{border-top:1px solid var(--rule);padding:24px 20px 24px 0;vertical-align:top}
+.cmp td:first-child{color:var(--muted);font-size:24px;font-weight:600;width:110px}
+.cmp td.old{color:var(--muted)}
+.cmp td.new{color:var(--ink)}
+
+/* === 07 SCENARIO === */
+.steps7{display:grid;grid-template-columns:repeat(7,1fr);gap:0;margin-top:20px}
+.chev{height:100px;background:var(--panel);clip-path:polygon(0 0,calc(100% - 30px) 0,100% 50%,calc(100% - 30px) 100%,0 100%,30px 50%);display:flex;align-items:center;padding-left:52px;font-size:30px;font-weight:700;color:var(--arc);margin-right:-18px}
+.chev.first{clip-path:polygon(0 0,calc(100% - 30px) 0,100% 50%,calc(100% - 30px) 100%,0 100%);padding-left:28px}
+.chev.on{background:var(--arc);color:var(--slide-bg)}
+.st h3{font-size:34px;color:var(--ink);margin:34px 20px 10px 4px}
+.st.on h3{color:var(--arc)}
+.st p{font-size:25px;color:var(--muted);margin:0 24px 0 4px;line-height:1.5}
+.span7{margin:70px 0 0 calc(100% / 7);border-top:3px solid var(--gas);position:relative;padding-top:26px;font-size:40px;color:var(--ink)}
+.span7::before,.span7::after{content:"";position:absolute;top:-14px;width:3px;height:25px;background:var(--gas)}
+.span7::before{left:0}.span7::after{right:0}
+.span7 b{color:var(--gas)}
+
+/* === 08 LEARNING LOOP === */
+.loop{position:relative;height:640px}
+.node{position:absolute;width:470px;height:200px;background:var(--panel);border-radius:6px;padding:30px 36px}
+.node h3{font-size:36px;color:var(--ink);margin-bottom:12px}
+.node p{font-size:25px;line-height:1.5}
+.node .o{color:var(--arc);font-weight:600}
+.node.dash{background:transparent;border:2px dashed var(--rule)}
+.node.dash h3,.node.dash p{color:var(--muted)}
+.arrow{position:absolute;background:var(--muted)}
+.arrow.h{height:3px}.arrow.v{width:3px}
+.arrow.o{background:var(--arc)}
+.arrow::after{content:"";position:absolute;border:12px solid transparent}
+.arrow.h.r::after{right:-14px;top:-10px;border-left:16px solid var(--muted)}
+.arrow.h.l::after{left:-14px;top:-10px;border-right:16px solid var(--muted)}
+.arrow.v.d::after{bottom:-14px;left:-10px;border-top:16px solid var(--muted)}
+.arrow.v.u::after{top:-14px;left:-10px;border-bottom:16px solid var(--arc)}
+
+/* === 09 END EFFECTOR === */
+.ee{display:grid;grid-template-columns:760px 1fr;gap:80px;align-items:center;height:800px}
+.ee video{width:760px;height:760px;background:#fff;border-radius:6px;object-fit:contain}
+.spec{display:grid;gap:34px}
+.spec .v{font-size:80px;font-weight:700;color:var(--ink);line-height:1;letter-spacing:-.03em}
+.spec .v small{font-size:34px;color:var(--muted);margin-left:8px}
+.spec .v.o{color:var(--arc)}.spec .v.g{color:var(--gas)}
+.spec p{font-size:27px;margin-top:8px}
+
+/* === 10 DEV PROCESS (troubleshooting) === */
+.dev{display:grid;grid-template-columns:1fr 640px;gap:70px}
+.tl{position:relative;padding-left:56px}
+.tl::before{content:"";position:absolute;left:14px;top:12px;bottom:12px;width:3px;background:linear-gradient(var(--gas),var(--arc))}
+.tl li{list-style:none;position:relative;margin-bottom:30px}
+.tl li::before{content:"";position:absolute;left:-52px;top:10px;width:24px;height:24px;border-radius:50%;background:var(--slide-bg);border:3px solid var(--gas)}
+.tl li.now::before{background:var(--arc);border-color:var(--arc)}
+.tl h3{font-size:32px;color:var(--ink);margin-bottom:4px}
+.tl p{font-size:25px;line-height:1.5}
+.tl p b{color:var(--ink);font-weight:600}
+.tl li.now h3{color:var(--arc)}
+.dev figure{background:#fff;border-radius:6px;padding:24px}
+.dev figure img{width:100%;display:block}
+.dev figcaption{font-size:22px;color:var(--muted);margin-top:16px}
+
+/* === 11 PROGRESS === */
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;height:700px}
+.col{padding:34px 32px;border-radius:6px}
+.col.doing{background:var(--panel)}
+.col h3{font-size:42px;margin-bottom:40px}
+.col p{font-size:31px;margin-bottom:40px;line-height:1.5}
+.col p small{display:block;color:var(--muted);font-size:25px;margin-top:4px}
+.col .o{color:var(--arc)}
+
+/* === 12 SUCCESS === */
+.succ{display:grid;grid-template-columns:620px 1fr;gap:80px}
+.succ .hero{font-size:230px;font-weight:700;line-height:1;color:var(--arc);letter-spacing:-.05em}
+.succ .hero.w{color:var(--ink);font-size:190px;margin-top:40px}
+.succ .hero small{font-size:70px;margin-left:8px}
+.succ .cap{font-size:30px;margin-top:6px}
+.crit{width:100%;border-collapse:collapse;font-size:28px}
+.crit th{text-align:left;color:var(--muted);font-size:24px;font-weight:600;padding:0 0 14px;border-bottom:2px solid var(--muted)}
+.crit td{padding:17px 0;border-bottom:1px solid var(--rule)}
+.crit td:first-child{color:var(--ink);font-weight:600;width:280px}
+.crit tr:last-child td{border-bottom:0}
+.crit .o{color:var(--arc);font-weight:600}
+.note{font-size:22px;color:var(--muted);margin-top:24px}
+
+/* === 13 SCHEDULE === */
+.gantt{display:grid;grid-template-columns:560px repeat(9,1fr);row-gap:0;font-size:28px}
+.gantt .h{font-size:24px;color:var(--muted);text-align:center;padding-bottom:18px;border-bottom:3px solid var(--arc)}
+.gantt .h.l{text-align:left}
+.gantt .h.d{color:var(--arc);font-weight:700}
+.gantt .task{padding:13px 0;border-bottom:1px solid var(--rule);color:var(--ink)}
+.gantt .task small{display:block;color:var(--muted);font-size:21px}
+.gantt .cell{border-bottom:1px solid var(--rule);border-left:1px dashed var(--rule);position:relative}
+.gantt .bar{position:absolute;top:50%;height:26px;transform:translateY(-50%);left:6px;right:6px;border-radius:4px;background:var(--ink)}
+.gantt .bar.o{background:var(--arc)}
+.gantt .bar.dash{background:transparent;border:3px dashed var(--gas)}
+.gantt .ms{position:absolute;top:50%;left:50%;width:30px;height:30px;border-radius:50%;background:var(--arc);transform:translate(-50%,-50%)}
+.legend{display:flex;gap:36px;justify-content:flex-end;font-size:22px;color:var(--muted);margin:-10px 0 16px}
+.legend i{display:inline-block;width:26px;height:16px;border-radius:3px;margin-right:10px;vertical-align:-1px}
+
+/* === 14 CLOSING === */
+.close .bg{position:absolute;inset:0}
+.close .scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(14,17,20,.94) 0%,rgba(14,17,20,.6) 55%,rgba(14,17,20,.1) 100%)}
+.close .kick{position:absolute;left:120px;top:250px;font-size:28px;font-weight:600;color:var(--arc)}
+.close h1{position:absolute;left:120px;top:310px;font-size:100px;width:1400px;line-height:1.25}
+.close .weld{position:absolute;left:120px;top:735px;width:760px;background:linear-gradient(90deg,rgba(255,122,26,0),var(--arc))}
+.close .sub{position:absolute;left:120px;top:780px;font-size:40px}
+
+/* ===========================================
+   CONTROLS (outside the slide design)
+   =========================================== */
+.deck-controls{display:flex;gap:10px;align-items:center;font-family:var(--font);color:#9aa3aa;font-size:14px;opacity:.0;transition:opacity .3s}
+body:hover .deck-controls,.deck-controls:focus-within{opacity:.95}
+.deck-controls button{background:#1A1F24;color:#e6e6e6;border:1px solid #333b42;border-radius:999px;width:38px;height:38px;cursor:pointer;font-size:18px}
+.deck-controls button:focus-visible{outline:2px solid var(--arc);outline-offset:2px}
+.progress{position:fixed;left:0;bottom:0;height:3px;background:var(--arc);z-index:1001;transition:width .4s var(--ease)}
+.edit-hotzone{position:fixed;top:0;left:0;width:80px;height:80px;z-index:10000}
+.edit-toggle{position:fixed;top:16px;left:16px;z-index:10001;opacity:0;pointer-events:none;transition:opacity .2s;background:#1A1F24;color:#fff;border:1px solid #333b42;border-radius:8px;padding:8px 12px;font-family:var(--font);font-size:14px;cursor:pointer}
+.edit-toggle.show,.edit-toggle.active{opacity:1;pointer-events:auto}
+.edit-toggle.active{background:var(--arc);color:#0E1114}
+body.editing [contenteditable="true"]{outline:1px dashed rgba(255,122,26,.6)}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>용접선 위의 기록</h1>
-    <p class="lead">IRC 2026 피지컬 AI 자율용접 팀이 축소 OPTi3 토치, 레이저 가상용접, 학습 구조를 만들며 부딪힌 문제를 모았습니다. 아래 비드 한 마디가 문제 하나이고, 색은 용접부가 열에 변하는 순서대로 상태를 나타냅니다.</p>
-    <div class="seam" id="seam">
-      <div class="tip" id="tip" role="status"></div>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- 01 표지 -->
+<section class="slide cover active" data-title="표지">
+  <div class="bg photo" style="background-image:url(deck/img/weld_6.jpg);background-position:62% center"></div>
+  <div class="scrim"></div>
+  <div class="kick reveal">2026 IRC 지능로봇대회 매니퓰레이터 종목</div>
+  <h1 class="reveal r2">숙련 용접사의 손기술을,<br>7축 로봇이 레이저로 잇는다</h1>
+  <div class="weld reveal r3"></div>
+  <div class="sub reveal r3">피지컬 AI 자율용접 매니퓰레이터 개발</div>
+  <div class="meta reveal r4">팀장 1명, 한성대학교 학부생 3명<span>|</span>본선 2026년 11월 13일(금)</div>
+  <div class="src">사진: 팀 제공 협동로봇 용접 영상 (2026년 11월)</div>
+</section>
+
+<!-- 02 숙련공 단절 -->
+<section class="slide gap" data-title="숙련 기술 단절">
+  <div class="ph photo" style="background-image:url(deck/img/wm_27.jpg);background-position:40% center"></div>
+  <div class="fade"></div>
+  <div class="mark">01 현장 / 숙련 기술</div>
+  <div class="txt">
+    <h2 class="reveal">합격자만 현장에 서는 기술이,<br>사람과 함께 사라지고 있다</h2>
+    <div class="big reveal r2">50<small>세 이상</small></div>
+    <div class="lbl reveal r2">국내 숙련 용접공의 평균 연령</div>
+    <div class="pts reveal r3">
+      <p>작업자 기량을 따로 시험해 <b>합격자만 투입하는 유일한 공종</b>이고, 그만큼 손기술과 경험에 기대는 암묵지가 많다</p>
+      <p>3D 업종으로 여겨져 <b>청년층 신규 유입이 크게 줄었다</b></p>
     </div>
-    <div class="seam-caption" id="legend"></div>
-  </header>
+  </div>
+  <div class="src">자료: 팀장 검토 자료　사진: Noah Sudolcan, U.S. Air Force, Public Domain</div>
+  <div class="num">02</div>
+</section>
 
-  <section class="ask" aria-labelledby="ask-title">
-    <div>
-      <h2 id="ask-title">겪은 문제가 있으면 남겨 주세요</h2>
-      <p>증상, 원인, 조치, 검증, 남은 일 다섯 칸만 채우면 됩니다. 원인을 아직 몰라도 괜찮습니다. 올라온 제보는 아래 '팀원 제보'에 바로 보이고, 정리되면 기록 목록으로 옮깁니다.</p>
+<!-- 03 야외 현장 -->
+<section class="slide" data-title="야외 현장의 한계">
+  <div class="mark">01 현장 / 자동용접의 한계</div>
+  <div class="pad">
+    <h2 class="reveal">공장의 자동용접은 야외 강교량 현장에서 멈춘다</h2>
+    <div class="duo reveal r2">
+      <div><div class="ph photo" style="background-image:url(deck/img/factory_robot.jpg)"></div>
+        <h3 style="color:var(--muted)">실내 철골 제작공장</h3><p>교시한 경로를 센서로 보정하며 정형 구조물을 용접한다</p></div>
+      <div><div class="ph photo" style="background-image:url(deck/img/wm_19.jpg);background-position:center 30%"></div>
+        <h3 class="hi">강교량 등 야외 건설현장</h3><p>위치와 방향, 설치 오차, 용접부 형상, 기상이 매번 달라 <b>여전히 수동용접에 의존한다</b></p></div>
     </div>
-    <a class="btn" id="new-issue" href="https://github.com/gawbi/irc2026-troubleshooting/issues/new?template=troubleshooting.yml">문제 제보하기</a>
-  </section>
+    <p class="take reveal r3">로봇이 스스로 용접 대상을 인지하고 판단하는 <span class="hi">자율용접</span>이 필요하다</p>
+  </div>
+  <div class="src">자료: 팀장 검토 자료　사진: Phasmatisnox, Openverse, CC BY 3.0 / FBenjr123, Wikimedia Commons, CC BY-SA 4.0</div>
+  <div class="num">03</div>
+</section>
 
-  <section aria-labelledby="list-title">
-    <div class="toolbar">
-      <h2 id="list-title">기록</h2>
-      <div class="chips" role="group" aria-label="분야로 거르기" id="area-chips"></div>
-      <div class="chips" role="group" aria-label="상태로 거르기" id="state-chips"></div>
+<!-- 04 실제 로봇 용접 -->
+<section class="slide" data-title="실제 로봇 용접">
+  <div class="mark">01 현장 / 실제 로봇 용접</div>
+  <div class="pad">
+    <h2 class="reveal">로봇 용접은 다가가고, 녹이고, 확인하고, 남긴다</h2>
+    <div class="rail reveal r2"><div class="line"></div>
+      <div class="dot" style="left:calc(12.5% - 21px)">1</div><div class="dot" style="left:calc(37.5% - 21px)">2</div>
+      <div class="dot on" style="left:calc(62.5% - 21px)">3</div><div class="dot" style="left:calc(87.5% - 21px)">4</div></div>
+    <div class="strip reveal r3">
+      <div><div class="ph photo" style="background-image:url(deck/img/weld_1.jpg)"></div><h3>다가간다</h3><p>T형 필렛 시편으로 접근</p></div>
+      <div><div class="ph photo" style="background-image:url(deck/img/weld_15.jpg)"></div><h3>녹인다</h3><p>아크로 용접선을 따라 용접</p></div>
+      <div class="on"><div class="ph photo" style="background-image:url(deck/img/weld_25.jpg)"></div><h3>확인한다</h3><p>레이저 점으로 용접선 위치 확인</p></div>
+      <div><div class="ph photo" style="background-image:url(deck/img/weld_29.jpg);background-position:center 60%"></div><h3>남긴다</h3><p>완성된 필렛 비드</p></div>
     </div>
-    <ol class="list" id="list"></ol>
-  </section>
+    <p class="take reveal r4" style="margin-top:46px">대회에서는 아크 대신 <span class="hi">레이저 점</span>으로 이 경로를 그린다</p>
+  </div>
+  <div class="src">영상: 팀 제공 협동로봇 용접 영상 (2026년 11월)</div>
+  <div class="num">04</div>
+</section>
 
-  <section class="reports" aria-labelledby="rep-title">
-    <h2 id="rep-title">팀원 제보</h2>
-    <p>깃허브 이슈로 올라온 제보입니다. 제목을 누르면 내용과 댓글을 볼 수 있습니다.</p>
-    <div id="reports"><p class="empty">제보를 불러오는 중입니다.</p></div>
-  </section>
+<!-- 05 포스코이앤씨 -->
+<section class="slide" data-title="포스코이앤씨 로봇">
+  <div class="mark">01 현장 / 산업 파트너</div>
+  <div class="pad">
+    <h2 class="reveal">포스코이앤씨 협동로봇은 세워 둔 이음부까지<br>토치 자세를 바꿔 가며 따라간다</h2>
+    <div class="vside reveal r2" style="grid-template-columns:1150px 1fr;height:640px">
+      <video src="deck/img/posco_clip.mp4" poster="deck/img/posco_58.jpg" muted loop playsinline preload="metadata"></video>
+      <div class="side">
+        <h3>장면</h3><p>전시장 시연,<br>수직으로 세운 H형 강재 이음부</p>
+        <h3 class="hi">우리가 가져올 것</h3><p>자세가 바뀌어도 이음부를 놓치지 않는 판단을, <b>시연 학습으로 만든다</b></p>
+      </div>
+    </div>
+  </div>
+  <div class="src">영상: 팀 제공 전시장 시연 영상 (2026년 11월)</div>
+  <div class="num">05</div>
+</section>
 
-  <footer>
-    <p>시뮬레이션, 에이전트, 비전 쪽 작업 기록은 팀 저장소의 docs/WORKLOG.md에 시간순으로 있습니다. 같은 내용은 팀 저장소 트러블슈팅 폴더에도 정리되어 있습니다.</p>
-    <p>기록을 고치려면 이 저장소의 data/entries.json을 수정해 주세요.</p>
-  </footer>
+<!-- 06 우리 목표 -->
+<section class="slide" data-title="우리 목표">
+  <div class="mark"><b>02 우리가 만든 것</b></div>
+  <div class="pad">
+    <div class="vside" style="grid-template-columns:1fr 470px;height:890px">
+      <div>
+        <h2 class="reveal">그 과정을 오픈소스 기반 7축 로봇이<br>시연으로 배운다</h2>
+        <table class="cmp reveal r2">
+          <tr><th></th><th>기존 자동용접</th><th class="us">이번 연구</th></tr>
+          <tr><td>경로</td><td class="old">교시로 미리 정한다</td><td class="new">숙련자가 리더암으로 보여 준 동작을 <span class="hi">ACT</span>가 학습한다</td></tr>
+          <tr><td>시편</td><td class="old">정해진 자리</td><td class="new">위치와 각도를 바꾼 임의 배치</td></tr>
+          <tr><td>판단</td><td class="old">사람이 시작과 끝을 지정</td><td class="new">로봇이 레이저 ON, 추종, OFF를 스스로 정한다</td></tr>
+        </table>
+        <p class="reveal r3" style="margin-top:40px;font-size:30px"><span class="gas" style="font-weight:700">SO-ARM102</span>　오픈소스 SO-ARM 기반 자체 제작 7축 로봇<br><span style="color:var(--muted);font-size:25px">대회 이후 상용 용접전원과 공정 제어를 붙여 현장용으로 넓힌다</span></p>
+      </div>
+      <video class="reveal r2" src="deck/img/soarm_clip.mp4" poster="deck/img/demo_12.jpg" muted loop playsinline preload="metadata" style="width:470px;height:840px;border-radius:6px"></video>
+    </div>
+  </div>
+  <div class="src" style="left:1330px">10월 27일 레이저 시연</div>
+  <div class="num">06</div>
+</section>
+
+<!-- 07 시나리오 -->
+<section class="slide" data-title="시연 시나리오">
+  <div class="mark">02 우리가 만든 것 / 시연 시나리오</div>
+  <div class="pad">
+    <h2 class="reveal">시편을 놓은 뒤부터는 사람이 손대지 않는다</h2>
+    <div class="steps7 reveal r2">
+      <div class="st"><div class="chev first">01</div><h3>시편 배치</h3><p>사람이 필렛 시편을 임의 위치와 각도로 놓는다</p></div>
+      <div class="st"><div class="chev">02</div><h3>시편 인식</h3><p>카메라로 시편과 용접선을 찾는다</p></div>
+      <div class="st"><div class="chev">03</div><h3>시작점 접근</h3><p>토치를 용접선 시작점 위로</p></div>
+      <div class="st"><div class="chev">04</div><h3>토치 거리</h3><p>용접부와 20±3mm(안)</p></div>
+      <div class="st on"><div class="chev on">05</div><h3>레이저 ON</h3><p>그리퍼 서보가 버튼을 누른다</p></div>
+      <div class="st"><div class="chev">06</div><h3>용접선 추종</h3><p>레이저 점이 선을 따라간다</p></div>
+      <div class="st"><div class="chev">07</div><h3>OFF, 복귀</h3><p>끝점에서 끄고 홈 자세로</p></div>
+    </div>
+    <div class="span7 reveal r3"><b>2~7단계</b>를 사람 개입 없이 끝내면 1회 성공</div>
+  </div>
+  <div class="num">07</div>
+</section>
+
+<!-- 08 학습 구조 -->
+<section class="slide" data-title="학습 구조">
+  <div class="mark">02 우리가 만든 것 / 학습 구조</div>
+  <div class="pad">
+    <h2 class="reveal">손잡이를 닫는 순간이, 레이저를 켜는 법으로 학습된다</h2>
+    <div class="loop reveal r2">
+      <div class="node" style="left:0;top:20px"><h3>리더암</h3><p>숙련자가 직접 조작<br><span class="o">손잡이 닫힘 = 레이저 ON</span></p></div>
+      <div class="arrow h r" style="left:480px;top:118px;width:60px"></div>
+      <div class="node" style="left:560px;top:20px"><h3>팔로워 <span class="gas">SO-ARM102</span></h3><p>1~6번 관절이 토치를 옮긴다<br><span class="o">7번 그리퍼 서보 = 레이저 버튼</span></p></div>
+      <div class="arrow h r" style="left:1040px;top:118px;width:60px"></div>
+      <div class="node" style="left:1120px;top:20px;width:560px"><h3>데이터셋</h3><p>카메라 영상 2개와 모터 7개 값, 50개 이상<br><span class="o">그리퍼 값 = 레이저 상태 (0, 100)</span></p></div>
+      <div class="arrow v d" style="left:1400px;top:230px;height:110px"></div>
+      <div class="node" style="left:1120px;top:360px;width:560px"><h3>ACT 학습</h3><p>영상과 관절 상태를 보고<br>다음 동작 묶음을 한 번에 예측</p></div>
+      <div class="arrow h l" style="left:1040px;top:458px;width:60px"></div>
+      <div class="node" style="left:560px;top:360px"><h3>실행</h3><p>리더암 없이 팔로워 모터 7개를<br>정책이 직접 움직인다</p></div>
+      <div class="arrow v u o" style="left:795px;top:240px;height:100px"></div>
+      <div class="node dash" style="left:0;top:360px"><h3 style="font-size:28px">대안 (준비 완료)</h3><p>서보가 안 되면 아두이노와<br>릴레이로 버튼 접점을 여닫는다</p></div>
+    </div>
+  </div>
+  <div class="num">08</div>
+</section>
+
+<!-- 09 엔드이펙터 -->
+<section class="slide" data-title="엔드이펙터">
+  <div class="mark">02 우리가 만든 것 / 엔드이펙터</div>
+  <div class="pad" style="top:80px">
+    <div class="ee">
+      <video class="reveal" src="deck/img/ee_turntable.mp4" poster="deck/img/ee_turntable_poster.png" muted loop playsinline preload="metadata"></video>
+      <div>
+        <h2 class="reveal r2" style="font-size:56px">축소 OPTi3 토치에 손목 카메라와<br>레이저를 한 몸으로 붙였다</h2>
+        <div class="spec reveal r3">
+          <div><div class="v">Ø14 × 88<small>mm</small></div><p>레이저 포인터 실측값, 클램프 링 3개로 고정</p></div>
+          <div><div class="v o">15.9<small>mm</small></div><p>토치 축과 평행한 레이저의 간격, 추종 오차는 레이저 점 기준</p></div>
+          <div><div class="v g">p28</div><p>기존 손목 카메라 마운트와 체결면을 원본 그대로</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="src">CAD 모델 360° 회전 (실제 설계 데이터)</div>
+  <div class="num">09</div>
+</section>
+
+<!-- 10 개발 과정 -->
+<section class="slide" data-title="개발 과정">
+  <div class="mark">02 우리가 만든 것 / 개발 과정</div>
+  <div class="pad">
+    <h2 class="reveal">출력하고, 부딪히고, 고치면서 여기까지 왔다</h2>
+    <div class="dev">
+      <ol class="tl reveal r2">
+        <li><h3>서보가 버튼에 닿지 않았다</h3><p>원래 자리 서보 축과 버튼 사이 <b>99mm</b>. 서보를 레이저 옆으로 옮기고 레버로 누름</p></li>
+        <li><h3>1차 출력, 레이저가 안 들어갔다</h3><p>버튼이 뒤쪽 링에 걸림 → <b>링에 버튼 홈</b>. 공중에 뜬 받침은 늘어짐 → <b>별도 부품으로 분리</b></p></li>
+        <li><h3>작업판에 부딪혔다</h3><p>와이어 21mm → 5mm로 <b>토치 16mm 단축</b>. 노즐보다 17mm 튀어나와 있던 레이저를 <b>15mm 뒤로</b></p></li>
+        <li class="now"><h3>지금: 모터를 손목 쪽으로</h3><p>모터가 머리에 있으면 어느 쪽이든 닿을 위험. <b>밀대와 꺾임 지렛대</b>로 손목에서 누르는 구조로 바꾸는 중</p></li>
+      </ol>
+      <figure class="reveal r3"><img src="images/laser-setback.jpg" alt="레이저 묶음을 뒤로 물리기 전과 후의 엔드이펙터"><figcaption>왼쪽 전, 오른쪽 후: 이제 맨 앞에는 노즐만 있다</figcaption></figure>
+    </div>
+  </div>
+  <div class="src">전체 기록: gawbi.github.io/irc2026-troubleshooting/log.html</div>
+  <div class="num">10</div>
+</section>
+
+<!-- 11 진행 상황 -->
+<section class="slide" data-title="진행 상황">
+  <div class="mark"><b>03 남은 길</b> / 11월 5일 기준</div>
+  <div class="pad">
+    <h2 class="reveal">설계는 끝났고, 실물 시험은 이번 주에 시작한다</h2>
+    <div class="board reveal r2">
+      <div class="col"><h3 class="gas">끝남</h3><p>Isaac Sim OPTi3 원격 조작<small>10월, 저장소 PR 6건</small></p><p>엔드이펙터 설계와 CAD 검사</p><p>레이저 녹화 방식, 릴레이 대안 코드</p></div>
+      <div class="col doing"><h3 class="hi">진행 중</h3><p>토치 부품 재출력<small>16mm 단축, 레이저 15mm 후퇴</small></p><p>모터를 손목 쪽으로<small>밀대와 꺾임 지렛대 설계</small></p></div>
+      <div class="col"><h3 style="color:var(--muted)">시작 전</h3><p>SO-ARM102용 LeRobot 7축 설정</p><p>캘리브레이션, 시연 녹화</p><p>ACT 학습, 반복시험</p></div>
+      <div class="col"><h3 style="color:var(--ink)">확인 필요</h3><p>레이저 버튼이 누르는 동안만 켜지는 방식인지</p><p style="color:var(--muted)">한 번 눌러 켜는 방식이면 릴레이 대안으로 바꾼다</p></div>
+    </div>
+  </div>
+  <div class="num">11</div>
+</section>
+
+<!-- 12 성공 기준 -->
+<section class="slide" data-title="성공 기준">
+  <div class="mark">03 남은 길 / 성공 기준</div>
+  <div class="pad">
+    <h2 class="reveal">30번 돌려 27번 이상, 처음부터 끝까지 해내야 한다</h2>
+    <div class="succ">
+      <div class="reveal r2"><div class="hero">90%</div><div class="cap">모든 항목을 통과한 비율 목표</div><div class="hero w">30<small>회 이상</small></div><div class="cap">반복시험 횟수</div></div>
+      <div class="reveal r3">
+        <table class="crit">
+          <tr><th>평가 항목</th><th>판정 기준(안)</th></tr>
+          <tr><td>시편 인식</td><td>시편 위치와 방향을 찾음</td></tr>
+          <tr><td>시작점 접근</td><td>위치 오차 <span class="o">5mm</span> 이하</td></tr>
+          <tr><td>토치 거리 유지</td><td>토치 끝과 용접부 <span class="o">20±3mm</span></td></tr>
+          <tr><td>레이저 ON</td><td>시작점에서 켜짐</td></tr>
+          <tr><td>용접선 추종</td><td>레이저 점 기준 이탈 <span class="o">5mm</span> 이하</td></tr>
+          <tr><td>종료점 도달</td><td>위치 오차 <span class="o">5mm</span> 이하</td></tr>
+          <tr><td>레이저 OFF</td><td>종료점에서 꺼짐</td></tr>
+          <tr><td>홈 자세 복귀</td><td>홈 자세 도달, 전체 작업 시간 기록</td></tr>
+        </table>
+        <p class="note">판정 수치는 팀 협의용 제안 목표값</p>
+      </div>
+    </div>
+  </div>
+  <div class="num">12</div>
+</section>
+
+<!-- 13 일정 -->
+<section class="slide" data-title="일정">
+  <div class="mark">03 남은 길 / 일정(안)</div>
+  <div class="pad">
+    <h2 class="reveal">본선까지 8일, 마지막 하루는 비워 둔다</h2>
+    <div class="legend reveal r2"><span><i style="background:var(--arc)"></i>진행 중</span><span><i style="background:var(--ink)"></i>예정</span><span><i style="border:3px dashed var(--gas)"></i>보완 여유</span></div>
+    <div class="gantt reveal r2" id="gantt"></div>
+  </div>
+  <div class="num">13</div>
+</section>
+
+<!-- 14 마무리 -->
+<section class="slide close" data-title="마무리">
+  <div class="bg photo" style="background-image:url(deck/img/weld_33.jpg)"></div>
+  <div class="scrim"></div>
+  <div class="kick reveal">우리 팀이 지키려는 한 문장</div>
+  <h1 class="reveal r2">숙련 용접사의 손기술을<br>데이터로 축적하고,<br><span class="hi">피지컬 AI로 계승한다</span></h1>
+  <div class="weld reveal r3"></div>
+  <div class="sub reveal r3">2026년 11월 13일 IRC 본선, 레이저 한 줄로 증명한다</div>
+  <div class="src">사진: 팀 제공 협동로봇 용접 영상 (2026년 11월)</div>
+</section>
+
+</main>
 </div>
 
+<div class="deck-controls" aria-label="슬라이드 이동">
+  <button type="button" id="prevBtn" aria-label="이전 장">‹</button>
+  <span id="pageNo">1 / 14</span>
+  <button type="button" id="nextBtn" aria-label="다음 장">›</button>
+</div>
+<div class="progress" id="progress"></div>
+<div class="edit-hotzone" id="editHot"></div>
+<button class="edit-toggle" id="editToggle" type="button" title="편집 모드 (E)">글자 고치기</button>
+
 <script>
-const REPO = 'gawbi/irc2026-troubleshooting';
-const STATES = [
-  {name:'확인 필요', color:'var(--straw)', hint:'짚색'},
-  {name:'보류', color:'var(--bronze)', hint:'청동색'},
-  {name:'진행 중', color:'var(--violet)', hint:'보라'},
-  {name:'해결', color:'var(--blue)', hint:'파랑'}
-];
-const colorOf = s => (STATES.find(x => x.name === s) || STATES[0]).color;
-const filter = {area:'전체', state:'전체'};
-let entries = [];
-
-function el(tag, attrs = {}, ...kids){
-  const n = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === 'class') n.className = v; else if (k === 'text') n.textContent = v; else n.setAttribute(k, v);
-  }
-  kids.flat().forEach(k => k && n.append(k));
-  return n;
-}
-
-function drawSeam(){
-  const box = document.getElementById('seam');
-  const NS = 'http://www.w3.org/2000/svg';
-  const n = entries.length, W = 1040, H = 120, x0 = 30, step = (W - 2 * x0) / n;
-  const svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', `문제 ${n}건을 비드 마디로 나타낸 용접선`);
-  const plate = document.createElementNS(NS, 'path');
-  plate.setAttribute('d', `M0 ${H/2+18} H${W}`);
-  plate.setAttribute('stroke', 'var(--line)'); plate.setAttribute('stroke-width', '2');
-  svg.append(plate);
-  const tip = document.getElementById('tip');
-  entries.forEach((e, i) => {
-    const cx = x0 + step * (i + .5), cy = H / 2 + Math.sin(i * .9) * 3;
-    const g = document.createElementNS(NS, 'g');
-    g.setAttribute('class', 'bead'); g.setAttribute('tabindex', '0'); g.setAttribute('role', 'link');
-    g.setAttribute('aria-label', `${e.id} ${e.title}, ${e.status}`);
-    // 비드 마디: 앞쪽이 둥글고 뒤로 물결 자국이 남는 반달 모양
-    const body = document.createElementNS(NS, 'path');
-    const rx = step * .9, ry = 22;
-    body.setAttribute('d', `M${cx - rx} ${cy} Q${cx - rx * .2} ${cy - ry * 1.5} ${cx + rx * .55} ${cy - ry * .55} Q${cx + rx} ${cy} ${cx + rx * .55} ${cy + ry * .55} Q${cx - rx * .2} ${cy + ry * 1.5} ${cx - rx} ${cy} Z`);
-    body.setAttribute('class', 'bead-body');
-    body.setAttribute('fill', colorOf(e.status)); body.setAttribute('stroke', 'rgba(0,0,0,.18)'); body.setAttribute('stroke-width', '1');
-    g.append(body);
-    for (let k = 1; k <= 2; k++) {
-      const r = document.createElementNS(NS, 'path');
-      const xx = cx + rx * (.1 + k * .17);
-      r.setAttribute('d', `M${xx} ${cy - ry * .62} Q${xx + 7} ${cy} ${xx} ${cy + ry * .62}`);
-      r.setAttribute('fill', 'none'); r.setAttribute('stroke', 'rgba(255,255,255,.45)'); r.setAttribute('stroke-width', '1.4');
-      g.append(r);
+/* ===========================================
+   GANTT: 날짜 칸 9개, 작업 6개 + 본선
+   =========================================== */
+(function(){
+  const days = ['11/5','11/6','11/7','11/8','11/9','11/10','11/11','11/12','11/13'];
+  const rows = [
+    ['토치 부품 재출력, 조립, 버튼 확인','하드웨어',0,2,'o'],
+    ['캘리브레이션, 원격 조작 점검','하드웨어',1,2,''],
+    ['시연 데이터 50개 이상 녹화','데이터와 AI',2,2,''],
+    ['ACT 학습과 추론 시험','데이터와 AI',4,2,''],
+    ['30회 반복시험','제어와 통합, 전원',5,2,''],
+    ['실패 항목 보완, 재학습 여유','전원',7,1,'dash']
+  ];
+  const g = document.getElementById('gantt');
+  const add = (cls, html) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; g.append(d); return d; };
+  add('h l', '할 일');
+  days.forEach((d, i) => add('h' + (i === 8 ? ' d' : ''), d));
+  rows.forEach(([t, who, s, n, k]) => {
+    add('task', `${t}<small>${who}</small>`);
+    for (let i = 0; i < 9; i++) {
+      const c = add('cell', '');
+      if (i === s) { const b = document.createElement('div'); b.className = 'bar ' + k; b.style.right = `calc(${-(n - 1) * 100}% + 6px)`; c.append(b); c.style.zIndex = 2; }
     }
-    const label = document.createElementNS(NS, 'text');
-    label.setAttribute('x', cx); label.setAttribute('y', H - 4); label.setAttribute('text-anchor', 'middle');
-    label.setAttribute('font-size', '13'); label.setAttribute('font-weight', '700'); label.setAttribute('fill', 'var(--muted)');
-    label.textContent = e.id;
-    g.append(label);
-    const show = () => {
-      const b = box.getBoundingClientRect(), r = g.getBoundingClientRect();
-      tip.textContent = `${e.id} ${e.title} (${e.status})`;
-      tip.style.left = (r.left + r.width / 2 - b.left) + 'px'; tip.style.top = (r.top - b.top - 6) + 'px';
-      tip.classList.add('on');
-    };
-    const hide = () => tip.classList.remove('on');
-    const open = () => {
-      filter.area = '전체'; filter.state = '전체'; renderChips(); renderList();
-      const d = document.getElementById('e-' + e.id); d.open = true; d.scrollIntoView({block:'start'});
-      d.querySelector('summary').focus({preventScroll:true});
-    };
-    g.addEventListener('mouseenter', show); g.addEventListener('mouseleave', hide);
-    g.addEventListener('focus', show); g.addEventListener('blur', hide);
-    g.addEventListener('click', open);
-    g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); open(); } });
-    svg.append(g);
   });
-  box.prepend(svg);
-  // 첫 화면에서 한 번만, 비드가 왼쪽부터 차례로 쌓인다
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    svg.querySelectorAll('.bead').forEach((g, i) => {
-      g.animate([{opacity:0, transform:'translateX(-10px)'}, {opacity:1, transform:'none'}], {duration:260, delay:120 + i * 70, easing:'ease-out', fill:'backwards'});
+  const last = add('task', '<span class="hi" style="font-weight:700">IRC 본선</span>');
+  last.style.borderBottom = '0';
+  for (let i = 0; i < 9; i++) { const c = add('cell', i === 8 ? '<div class="ms"></div>' : ''); c.style.borderBottom = '0'; }
+})();
+
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   =========================================== */
+class SlidePresentation {
+  constructor(){
+    this.slides = [...document.querySelectorAll('.slide')];
+    this.stage = document.getElementById('deckStage');
+    this.i = 0; this.lock = false;
+    this.scale(); addEventListener('resize', () => this.scale());
+    addEventListener('keydown', e => {
+      if (document.body.classList.contains('editing')) return;
+      if (['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)) { e.preventDefault(); this.go(this.i + 1); }
+      if (['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) { e.preventDefault(); this.go(this.i - 1); }
+      if (e.key === 'Home') this.go(0); if (e.key === 'End') this.go(this.slides.length - 1);
     });
+    addEventListener('wheel', e => {
+      if (this.lock || Math.abs(e.deltaY) < 30) return;
+      this.lock = true; setTimeout(() => this.lock = false, 700); this.go(this.i + (e.deltaY > 0 ? 1 : -1));
+    }, {passive:true});
+    let x0 = null;
+    addEventListener('touchstart', e => x0 = e.touches[0].clientX, {passive:true});
+    addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) this.go(this.i + (dx < 0 ? 1 : -1)); x0 = null; });
+    document.getElementById('prevBtn').onclick = () => this.go(this.i - 1);
+    document.getElementById('nextBtn').onclick = () => this.go(this.i + 1);
+    const h = parseInt(location.hash.slice(1), 10);
+    this.go(Number.isFinite(h) ? h - 1 : 0);
   }
-  const legend = document.getElementById('legend');
-  STATES.forEach(s => {
-    const c = entries.filter(e => e.status === s.name).length;
-    legend.append(el('span', {class:'swatch'}, el('i', {style:`background:${s.color}`}), `${s.name} ${c}건`));
-  });
+  scale(){
+    const f = Math.min(innerWidth / 1920, innerHeight / 1080);
+    this.stage.style.transform = `translate(${(innerWidth - 1920 * f) / 2}px, ${(innerHeight - 1080 * f) / 2}px) scale(${f})`;
+  }
+  go(n){
+    this.i = Math.max(0, Math.min(n, this.slides.length - 1));
+    this.slides.forEach((s, k) => {
+      const on = k === this.i;
+      s.classList.toggle('active', on); s.classList.toggle('visible', on);
+      s.querySelectorAll('video').forEach(v => { if (on) { v.play().catch(() => {}); } else { v.pause(); } });
+    });
+    document.getElementById('pageNo').textContent = `${this.i + 1} / ${this.slides.length}`;
+    document.getElementById('progress').style.width = `${(this.i + 1) / this.slides.length * 100}%`;
+    history.replaceState(null, '', '#' + (this.i + 1));
+  }
 }
+new SlidePresentation();
 
-function renderChips(){
-  const make = (box, key, values) => {
-    box.replaceChildren(...['전체', ...values].map(v => {
-      const b = el('button', {class:'chip', type:'button', 'aria-pressed': String(filter[key] === v), text:v});
-      b.addEventListener('click', () => { filter[key] = v; renderChips(); renderList(); });
-      return b;
-    }));
+/* ===========================================
+   INLINE EDITING: 왼쪽 위에 마우스를 대거나 E 키
+   고친 글자는 이 브라우저에만 저장된다
+   =========================================== */
+(function(){
+  const btn = document.getElementById('editToggle'), hot = document.getElementById('editHot');
+  const KEY = 'irc2026-deck-edits';
+  const editable = () => document.querySelectorAll('.slide h1, .slide h2, .slide h3, .slide p, .slide td, .slide figcaption, .slide .kick, .slide .sub, .slide .meta');
+  let t = null;
+  hot.addEventListener('mouseenter', () => { clearTimeout(t); btn.classList.add('show'); });
+  hot.addEventListener('mouseleave', () => { t = setTimeout(() => { if (!btn.matches(':hover')) btn.classList.remove('show'); }, 400); });
+  btn.addEventListener('mouseleave', () => { t = setTimeout(() => btn.classList.remove('show'), 400); });
+  try { const saved = JSON.parse(localStorage.getItem(KEY) || '{}'); editable().forEach((el, i) => { if (saved[i] !== undefined) el.innerHTML = saved[i]; }); } catch (e) {}
+  const toggle = () => {
+    const on = !document.body.classList.contains('editing');
+    document.body.classList.toggle('editing', on); btn.classList.toggle('active', on);
+    btn.textContent = on ? '편집 끝내기' : '글자 고치기';
+    editable().forEach(el => el.contentEditable = on ? 'true' : 'false');
+    if (!on) { const out = {}; editable().forEach((el, i) => out[i] = el.innerHTML); try { localStorage.setItem(KEY, JSON.stringify(out)); } catch (e) {} }
   };
-  make(document.getElementById('area-chips'), 'area', [...new Set(entries.map(e => e.area))]);
-  make(document.getElementById('state-chips'), 'state', STATES.map(s => s.name).filter(n => entries.some(e => e.status === n)));
-}
-
-function renderList(){
-  const list = document.getElementById('list');
-  const shown = entries.filter(e => (filter.area === '전체' || e.area === filter.area) && (filter.state === '전체' || e.status === filter.state));
-  if (!shown.length) { list.replaceChildren(el('li', {class:'empty', text:'이 조건에 맞는 기록이 없습니다. 거르기를 풀어 보세요.'})); return; }
-  list.replaceChildren(...shown.map(e => {
-    const steps = [['증상', e.symptom], ['원인', e.cause], ['조치', e.fix], ['검증', e.check], ['남은 일', e.next]]
-      .map(([h, p]) => el('div', {class:'step'}, el('h3', {text:h}), el('p', {text:p})));
-    const body = el('div', {class:'body'}, el('div', {class:'steps'}, steps));
-    if (e.image) body.append(el('figure', {}, el('img', {src:e.image, alt:e.imageAlt || '', loading:'lazy'}), el('figcaption', {text:e.imageAlt || ''})));
-    const det = el('details', {id:'e-' + e.id},
-      el('summary', {},
-        el('span', {class:'code', text:e.id}),
-        el('span', {class:'t'}, e.title, el('span', {class:'meta', text:e.area})),
-        el('span', {class:'state'}, el('i', {style:`background:${colorOf(e.status)}`}), e.status)),
-      body);
-    return el('li', {class:'item'}, det);
-  }));
-}
-
-async function loadReports(){
-  const box = document.getElementById('reports');
-  try {
-    const r = await fetch(`https://api.github.com/repos/${REPO}/issues?labels=troubleshooting&state=all&per_page=50`);
-    if (!r.ok) throw new Error(r.status);
-    const items = (await r.json()).filter(i => !i.pull_request);
-    if (!items.length) { box.replaceChildren(el('p', {class:'empty', text:'아직 올라온 제보가 없습니다. 위의 문제 제보하기로 첫 기록을 남겨 주세요.'})); return; }
-    box.replaceChildren(...items.map(i => el('div', {class:'report'},
-      el('a', {href:i.html_url, text:`#${i.number} ${i.title}`}),
-      el('span', {text:`${i.user.login}, ${new Date(i.created_at).toLocaleDateString('ko-KR')}${i.state === 'closed' ? ', 정리됨' : ''}`}))));
-  } catch (err) {
-    box.replaceChildren(el('p', {class:'empty'}, '제보 목록을 불러오지 못했습니다. ', el('a', {href:`https://github.com/${REPO}/issues`, text:'깃허브 이슈에서 직접 보기'})));
-  }
-}
-
-fetch('data/entries.json').then(r => r.json()).then(data => {
-  entries = data; drawSeam(); renderChips(); renderList();
-}).catch(() => {
-  document.getElementById('list').replaceChildren(el('li', {class:'empty', text:'기록 파일(data/entries.json)을 읽지 못했습니다. 로컬에서는 간단한 웹 서버로 여세요.'}));
-});
-loadReports();
+  btn.addEventListener('click', toggle);
+  addEventListener('keydown', e => { if ((e.key === 'e' || e.key === 'E') && !document.body.classList.contains('editing')) toggle(); });
+})();
 </script>
 </body>
 </html>

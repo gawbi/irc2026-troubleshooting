@@ -86,6 +86,7 @@
     <a href="#parts">하드웨어와 부품</a>
     <a href="#ee">엔드이펙터 개선</a>
     <a href="#learn">데이터 수집과 학습</a>
+    <a href="#speed">추론 최적화</a>
     <a href="#measure">성공 판정 기준</a>
     <a href="#limits">한계와 향후 과제</a>
     <a href="#refs">참고 자료</a>
@@ -218,6 +219,37 @@
   </div>
   <div class="box gray">
     <p><b>배치 다양화</b>: 시편 위치와 방향을 바꿔 가며 시연해야 배치가 달라져도 대응합니다. 카메라는 회전하지 않는 받침에 고정해, 학습과 실행 때 시점이 같게 합니다.</p>
+  </div>
+</section>
+
+<section id="speed">
+  <h2><small>05-1</small>YOLO 추론 최적화</h2>
+  <p class="lead">용접선 검출 YOLO11n-pose 모델을 ONNX로 바꿔 실행 환경 종속성을 없애고, TensorRT FP16 엔진으로 다시 바꿔 GPU에 맞게 최적화했습니다. 검증 이미지 1,010장을 같은 노트북 GPU(RTX 5070)에서 비교한 결과, 정확도는 그대로이고 속도는 약 2.1배 빨라졌습니다.</p>
+  <div class="two">
+    <div class="scroll">
+    <table>
+      <thead><tr><th>1회 추론 시간 (전처리, 후처리 포함)</th><th>변환 전 (PyTorch)</th><th>변환 후 (TensorRT FP16)</th></tr></thead>
+      <tbody>
+        <tr><td>중앙값</td><td>8.1 ms</td><td>3.8 ms</td></tr>
+        <tr><td>느린 쪽 5%</td><td>11.6 ms</td><td>6.5 ms</td></tr>
+        <tr><td>최대</td><td>14.9 ms</td><td>9.4 ms</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>정확도 (정답 라벨 비교)</th><th>변환 전</th><th>변환 후</th></tr></thead>
+      <tbody>
+        <tr><td>키포인트 위치 오차 (중앙값)</td><td>0.93 px</td><td>0.91 px</td></tr>
+        <tr><td>가림 판정 정확도</td><td>97.62 %</td><td>97.70 %</td></tr>
+        <tr><td>검출 신뢰도 차이</td><td>-</td><td>평균 0.002</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+  <div class="box gray">
+    <p><b>알아 둘 점</b>: TensorRT 엔진은 변환한 GPU에서만 돌아서, 다른 장비에서 쓰려면 그 장비에서 다시 변환해야 합니다. 모델을 다시 학습하면 엔진도 다시 만들어야 하며, 엔진이 학습 모델보다 오래되면 자동으로 PyTorch로 돌아갑니다. 손목 카메라 모델은 아직 PyTorch로 실행합니다.</p>
+    <p><b>다음 단계</b>: ACT 정책도 같은 방식(ONNX, TensorRT)으로 변환해 정책 추론 시간을 줄일 예정입니다.</p>
   </div>
 </section>
 

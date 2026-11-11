@@ -141,50 +141,51 @@
     <tbody>
       <tr><td>매니퓰레이터</td><td>오픈소스 SO-ARM(SO-101) 기반 자체 제작 7축. 관절 6개와 그리퍼, 모터 7개. 리더암과 팔로워암 한 쌍</td></tr>
       <tr><td>서보</td><td>Feetech STS3215 (SO-101 기본 서보), USB 시리얼 연결</td></tr>
-      <tr><td>엔드이펙터</td><td>1/3 축소 토치와 펜형 레이저 포인터(지름 14mm, 길이 88mm) 일체형, 3D 프린팅</td></tr>
-      <tr><td>레이저 ON/OFF</td><td>그리퍼 채널 서보가 레버로 레이저 버튼을 누름</td></tr>
+      <tr><td>엔드이펙터</td><td>펜형 레이저 포인터 일체형, 3D 프린팅. 본체, 집게, 브래킷 3개 부품</td></tr>
+      <tr><td>레이저 ON/OFF</td><td>그리퍼 채널 서보의 집게가 레이저 버튼을 직접 누름</td></tr>
       <tr><td>카메라</td><td>2대. 상단(시편 위치와 방향), 손목(용접선 근접 확인)</td></tr>
-      <tr><td>체결</td><td>M3×10 볼트, 육각 너트</td></tr>
       <tr><td>시편</td><td>3D 프린팅 T자 필릿 2종(길이 181mm, 길이 204mm 두꺼운 판)</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h3>엔드이펙터 출력 파일 (STL)</h3>
-  <p class="lead">현재 출력 세트는 토치 16mm 단축, 레이저 묶음 15mm 후퇴 버전입니다. SO-101 손목에 그대로 체결됩니다.</p>
-  <div class="scroll">
-  <table>
-    <thead><tr><th>번호</th><th>부품</th><th>설명</th></tr></thead>
-    <tbody>
-      <tr><td class="n">01</td><td><a href="project/stl/01_SO101_체결확인용_먼저출력.stl" download>체결 확인용</a></td><td>손목 체결 구멍이 맞는지 먼저 확인하는 작은 부품. 가장 먼저 출력</td></tr>
-      <tr><td class="n">02</td><td><a href="project/stl/02_SO101_카메라체결면유지_베이스.stl" download>베이스</a></td><td>손목 카메라 체결면을 그대로 유지한 토치 받침</td></tr>
-      <tr><td class="n">03</td><td><a href="project/stl/03_OPTi3_축소토치_레이저홀더일체형_단축16_후퇴15.stl" download>토치와 레이저 홀더</a></td><td>1/3 축소 토치와 레이저 홀더 일체형. 토치 16mm 단축, 레이저 15mm 후퇴. 높이 101.3mm</td></tr>
-      <tr><td class="n">04</td><td><a href="project/stl/04_손목카메라_마운트_p28_원본그대로.stl" download>손목 카메라 마운트</a></td><td>SO-ARM 원본 손목 카메라 마운트 그대로</td></tr>
-      <tr><td class="n">05</td><td><a href="project/stl/05_레이저지름_확인게이지.stl" download>레이저 지름 게이지</a></td><td>가진 레이저 포인터가 홀더에 맞는지 확인하는 게이지</td></tr>
-      <tr><td class="n">06</td><td><a href="project/stl/06_서보레버_집게혼결합.stl" download>서보 레버</a></td><td>서보 혼에 끼워 레이저 버튼을 누르는 레버. 끝에 1.2mm 탄성 손가락</td></tr>
-      <tr><td class="n">07</td><td><a href="project/stl/07_서보받침_바닥을판에대고출력.stl" download>서보 받침</a></td><td>서보를 받치는 부품. 처짐을 막으려고 따로 분리함. 바닥을 출력판에 대고 출력</td></tr>
-    </tbody>
-  </table>
+  <h3>엔드이펙터 출력 파일</h3>
+  <div class="two">
+    <figure>
+      <img src="project/img/ee_cad.png" alt="최종 레이저 일체형 엔드이펙터 CAD. 서보와 본체, 레이저 포인터를 잡는 집게와 브래킷" loading="lazy">
+      <figcaption>최종 레이저 일체형 엔드이펙터</figcaption>
+    </figure>
+    <div>
+      <p class="lead">세 부품이 출력판에 배치된 Bambu Studio 프로젝트 파일 하나로 내려받을 수 있습니다.</p>
+      <p><a href="project/files/01_body_print.3mf" download><b>01_body_print.3mf 내려받기</b></a> (약 290KB)</p>
+      <div class="scroll">
+      <table>
+        <thead><tr><th>부품</th><th>역할</th></tr></thead>
+        <tbody>
+          <tr><td>01_body</td><td>손목에 붙는 본체. 그리퍼 서보 자리</td></tr>
+          <tr><td>02_jaw</td><td>서보에 달려 레이저 버튼을 누르는 집게</td></tr>
+          <tr><td>03_bracket_v6</td><td>레이저 포인터를 잡아 주는 브래킷</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
   </div>
-  <p>설계 검사 결과(부품 겹침, 레버 회전 간섭 등): <a href="project/stl/설계_검수결과.json">설계_검수결과.json</a><br>
-  SO-ARM100 원본 형상을 바탕으로 만들었으며 원본 라이선스(Apache 2.0)를 따릅니다: <a href="project/stl/LICENSE_SO_ARM100.txt">LICENSE_SO_ARM100.txt</a></p>
 </section>
 
 <section id="ee">
   <h2><small>04</small>엔드이펙터 개선 과정</h2>
   <div class="two">
     <figure>
-      <img src="project/img/ee_setback.jpg" alt="레이저 묶음 후퇴 전후 CAD 비교. 왼쪽이 개선 전, 오른쪽이 개선 후" loading="lazy">
-      <figcaption>왼쪽 개선 전, 오른쪽 개선 후. 부품 높이 117.0mm에서 101.3mm</figcaption>
+      <img src="project/img/ee_torch_old.jpg" alt="1차 설계인 OPTi3 축소 토치형 엔드이펙터 CAD. 토치 옆에 레이저와 서보가 달려 있음" loading="lazy">
+      <figcaption>1차 설계: OPTi3 축소 토치형 (토치 단축, 레이저 후퇴 적용 후)</figcaption>
     </figure>
     <div>
-      <p class="lead">처음 단 토치형 엔드이펙터는 작업판에 계속 부딪혔습니다. 원인을 하나씩 찾아 고친 과정입니다.</p>
+      <p class="lead">처음에는 OPTi3 용접 토치를 1/3로 줄인 모형에 레이저와 서보를 붙였습니다. 이 형태가 작업판에 계속 부딪혀, 아래 순서로 고치다가 결국 다시 설계했습니다.</p>
       <ol class="steps">
-        <li><b>버튼에 닿지 않음</b>: 원래 그리퍼 서보는 레이저 버튼과 99mm 떨어져 있어 서보를 레이저 옆으로 옮기고 레버로 누름</li>
-        <li><b>레이저가 안 들어감</b>: 버튼 돌기가 뒤쪽 링에 걸려 링에 홈을 냄</li>
-        <li><b>서보 받침 처짐</b>: 공중에 뜬 받침을 별도 부품으로 분리</li>
-        <li><b>토치가 판에 닿음</b>: 와이어 돌출 21mm를 5mm로, 토치 16mm 단축</li>
-        <li><b>레이저가 판에 먼저 닿음</b>: 레이저 묶음을 15mm 뒤로 물림</li>
+        <li><b>토치가 판에 닿음</b>: 와이어 돌출 21mm를 5mm로 줄여 토치 16mm 단축</li>
+        <li><b>레이저가 판에 먼저 닿음</b>: 레이저 묶음을 15mm 뒤로 물림. 부품 높이 117.0mm에서 101.3mm</li>
+        <li><b>그래도 충돌</b>: 토치 머리의 서보가 커서 어느 쪽에 두어도 판에 닿을 위험이 남음</li>
+        <li><b>최종 재설계</b>: 토치를 없애고 레이저 포인터 자체를 토치 대신 쓰는 일체형으로 변경. 본체, 집게, 브래킷 3개 부품</li>
       </ol>
     </div>
   </div>
@@ -222,12 +223,11 @@
 
 <section id="measure">
   <h2><small>06</small>측정 기준</h2>
-  <p class="lead">레이저는 토치 축과 평행하게 15.9mm 옆에 달려 있어, 레이저 점도 토치 축에서 15.9mm 옆에 찍힙니다. 그래서 두 값을 다른 기준으로 잽니다.</p>
   <div class="scroll">
   <table>
     <thead><tr><th>항목</th><th>기준</th><th>재는 방법</th></tr></thead>
     <tbody>
-      <tr><td>토치 끝 거리</td><td>20±3mm</td><td>토치 끝 오프셋을 실측해 관절값으로 계산하고 게이지 블록으로 확인</td></tr>
+      <tr><td>토치(레이저 끝) 거리</td><td>20±3mm</td><td>게이지 블록으로 확인</td></tr>
       <tr><td>용접선 추종 오차</td><td>경로 이탈 5mm 이하</td><td>레이저 점 기준</td></tr>
       <tr><td>레이저 ON/OFF</td><td>시작점에서 켜고 종료점에서 끔</td><td>카메라 영상으로 확인</td></tr>
     </tbody>

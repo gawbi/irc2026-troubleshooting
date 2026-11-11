@@ -86,7 +86,7 @@
     <a href="#parts">하드웨어와 부품</a>
     <a href="#ee">엔드이펙터 개선</a>
     <a href="#learn">데이터 수집과 학습</a>
-    <a href="#measure">측정 기준</a>
+    <a href="#measure">성공 판정 기준</a>
     <a href="#limits">한계와 향후 과제</a>
     <a href="#refs">참고 자료</a>
   </div>
@@ -222,16 +222,31 @@
 </section>
 
 <section id="measure">
-  <h2><small>06</small>측정 기준</h2>
+  <h2><small>06</small>성공 판정 기준</h2>
+  <p class="lead">한 번의 시도는 아래 8개 항목을 모두 통과해야 성공으로 봅니다. 판정 수치는 팀 협의용 제안값입니다.</p>
   <div class="scroll">
   <table>
-    <thead><tr><th>항목</th><th>기준</th><th>재는 방법</th></tr></thead>
+    <thead><tr><th>No</th><th>평가 항목</th><th>판정 기준(안)</th><th>기록 데이터</th></tr></thead>
     <tbody>
-      <tr><td>토치(레이저 끝) 거리</td><td>20±3mm</td><td>게이지 블록으로 확인</td></tr>
-      <tr><td>용접선 추종 오차</td><td>경로 이탈 5mm 이하</td><td>레이저 점 기준</td></tr>
-      <tr><td>레이저 ON/OFF</td><td>시작점에서 켜고 종료점에서 끔</td><td>카메라 영상으로 확인</td></tr>
+      <tr><td class="n">1</td><td>시편 인식</td><td>시편 위치와 방향 인식 성공</td><td>인식 결과</td></tr>
+      <tr><td class="n">2</td><td>시작점 접근</td><td>시작점 위치 오차 5mm 이하</td><td>시작점 위치 오차</td></tr>
+      <tr><td class="n">3</td><td>토치 거리 유지</td><td>TCP와 용접부 거리 20±3mm</td><td>거리 오차</td></tr>
+      <tr><td class="n">4</td><td>레이저 ON</td><td>시작점에서 레이저 ON</td><td>ON 시점과 위치</td></tr>
+      <tr><td class="n">5</td><td>용접선 추종</td><td>추종 경로 이탈 5mm 이하, 용접선의 90% 이상이 빨간색으로 바뀜</td><td>추종 위치 오차, 빨간색 비율</td></tr>
+      <tr><td class="n">6</td><td>종료점 도달</td><td>종료점 위치 오차 5mm 이하</td><td>종료점 위치 오차</td></tr>
+      <tr><td class="n">7</td><td>레이저 OFF</td><td>종료점에서 레이저 OFF</td><td>OFF 시점과 위치</td></tr>
+      <tr><td class="n">8</td><td>원위치 복귀</td><td>홈 위치 복귀 완료</td><td>전체 작업시간</td></tr>
     </tbody>
   </table>
+  </div>
+
+  <h3>빨간색으로 바뀌면 용접한 구간</h3>
+  <div class="box">
+    <p>YOLO가 화면에서 찾은 용접선은 처음에 파란색으로 표시됩니다. 레이저 점이 지나간 구간은 빨간색으로 바뀝니다.</p>
+    <p>시도가 끝났을 때 <b>용접선 대부분(90% 이상)이 빨간색이면 용접선을 끝까지 따라간 것</b>으로 보고, 5번 항목을 통과한 것으로 판정합니다. 남은 파란 구간은 레이저가 지나가지 않은, 즉 실제 용접이라면 비드가 빠졌을 구간입니다.</p>
+  </div>
+  <div class="box gray">
+    <p><b>재는 방법</b>: 토치(레이저 끝) 거리는 게이지 블록으로, 추종 오차와 시작점, 종료점 오차는 레이저 점 위치로, 레이저 ON/OFF는 카메라 영상으로 확인합니다.</p>
   </div>
   <!-- 시연 결과(시도 횟수, 성공률, 평균 오차)는 측정 후 여기에 표로 추가 -->
 </section>

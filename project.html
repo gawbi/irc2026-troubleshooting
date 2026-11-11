@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>7축 자율용접 로봇 | 2026 IRC 지능로봇대회</title>
-<meta name="description" content="숙련 용접사의 시연을 ACT 모방학습으로 배우는 7축 자율용접 로봇. 구성, 부품 파일, 학습 방법, 개발 기록.">
+<title>6축 자율용접 로봇 | 2026 IRC 지능로봇대회</title>
+<meta name="description" content="숙련 용접사의 시연을 ACT 모방학습으로 배우는 6축 자율용접 로봇. 구성, 부품 파일, 학습 방법, 개발 기록.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root {
@@ -68,7 +68,7 @@
 <header>
   <div class="wrap">
     <span class="tag">2026 IRC 지능로봇대회 매니퓰레이터 종목</span>
-    <h1>숙련 용접사의 시연을 배우는<br>7축 자율용접 로봇</h1>
+    <h1>숙련 용접사의 시연을 배우는<br>6축 자율용접 로봇</h1>
     <p>숙련 용접사의 기술을 데이터로 축적하고, Physical AI로 계승한다</p>
     <div class="team">손태산, 김광빈, 김동희, 왕혜영</div>
     <div class="btns">
@@ -99,7 +99,7 @@
   <div class="two">
     <figure>
       <img class="tall" src="project/img/s3_robot.jpg" alt="3D 프린팅한 레이저 일체형 엔드이펙터를 단 자체 제작 로봇 팔" loading="lazy">
-      <figcaption>자체 제작 7축 로봇의 레이저 일체형 엔드이펙터</figcaption>
+      <figcaption>자체 제작 6축 로봇의 레이저 일체형 엔드이펙터</figcaption>
     </figure>
     <div>
       <p class="lead">숙련 용접공의 고령화로 기술이 끊길 우려가 있고, 기존 교시 기반 자동용접은 작업물 위치가 매번 바뀌는 건설현장에 쓰기 어렵습니다. 그래서 숙련자가 리더암으로 시연한 동작을 ACT 모방학습으로 배워, 임의로 놓인 시편을 스스로 용접하는 로봇을 만들었습니다.</p>
@@ -112,7 +112,7 @@
     <li><b>시편 배치</b>: 작업자가 시편을 임의 위치와 방향에 놓음</li>
     <li><b>시편 인식</b>: 카메라로 시편과 용접선을 인식</li>
     <li><b>시작점 접근</b>: 용접 시작점으로 로봇 이동</li>
-    <li><b>토치 거리 확보</b>: 토치와 용접부 거리 20mm</li>
+    <li><b>토치 거리 유지</b>: 용접부와 약 20mm 간격을 두고 접근</li>
     <li><b>레이저 ON</b>: 시작점에서 레이저를 켬</li>
     <li><b>용접선 추종</b>: X, Y 방향 접합선을 따라감</li>
     <li><b>작업 종료</b>: 레이저 OFF 후 원위치 복귀</li>
@@ -122,7 +122,7 @@
 <section id="system">
   <h2><small>02</small>시스템 구성</h2>
   <figure>
-    <img src="project/img/architecture.png" alt="시스템 구성도. 상단과 손목 카메라 영상이 로컬 PC의 ACT 정책으로 들어가고, 정책의 목표 관절값이 서보 제어를 거쳐 7축 매니퓰레이터로 전달됨. 손 검출 시 정지, 웹 클라이언트로 영상과 상태 전송" loading="lazy">
+    <img src="project/img/architecture.png" alt="시스템 구성도. 상단과 손목 카메라 영상이 로컬 PC의 ACT 정책으로 들어가고, 정책의 목표 관절값이 서보 제어를 거쳐 6축 매니퓰레이터와 엔드이펙터로 전달됨. 손 검출 시 정지, 웹 클라이언트로 영상과 상태 전송" loading="lazy">
   </figure>
   <ul class="plain">
     <li>카메라 2대(상단, 손목) 영상이 USB로 로컬 PC에 들어옵니다.</li>
@@ -139,12 +139,12 @@
   <table>
     <thead><tr><th>구성</th><th>내용</th></tr></thead>
     <tbody>
-      <tr><td>매니퓰레이터</td><td>부품을 STL로 직접 설계해 3D 프린팅으로 만든 자체 제작 7축. 관절 6개와 그리퍼, 모터 7개. 리더암과 팔로워암 한 쌍</td></tr>
+      <tr><td>매니퓰레이터</td><td>부품을 STL로 직접 설계해 3D 프린팅으로 만든 자체 제작 6축 매니퓰레이터와 레이저 엔드이펙터. 리더암과 팔로워암 한 쌍</td></tr>
       <tr><td>서보</td><td>Feetech STS3215, USB 시리얼 연결</td></tr>
       <tr><td>엔드이펙터</td><td>펜형 레이저 포인터 일체형, 3D 프린팅. 본체, 집게, 브래킷 3개 부품</td></tr>
       <tr><td>레이저 ON/OFF</td><td>그리퍼 채널 서보의 집게가 레이저 버튼을 직접 누름</td></tr>
       <tr><td>카메라</td><td>2대. 상단(시편 위치와 방향), 손목(용접선 근접 확인)</td></tr>
-      <tr><td>시편</td><td>3D 프린팅 T자 필릿 2종(길이 181mm, 길이 204mm 두꺼운 판)</td></tr>
+      <tr><td>시편</td><td>3D 프린팅 T자 필릿(길이 181mm), 3면 직각 코너 시편</td></tr>
     </tbody>
   </table>
   </div>
@@ -199,22 +199,22 @@
     <thead><tr><th>단계</th><th>내용</th></tr></thead>
     <tbody>
       <tr><td class="n">시연</td><td>숙련자가 리더암을 잡고 움직이면 팔로워암이 실시간으로 같은 동작을 함</td></tr>
-      <tr><td class="n">기록</td><td>카메라 2대 영상, 관절 7개 값(레이저 ON/OFF 채널 포함)을 시간에 맞춰 함께 저장</td></tr>
+      <tr><td class="n">기록</td><td>카메라 2대 영상, 관절 6개 값과 레이저 ON/OFF 채널을 시간에 맞춰 함께 저장</td></tr>
       <tr><td class="n">학습</td><td>ACT 정책. 영상과 관절 상태를 보고 다음 동작을 묶음(action chunk)으로 예측</td></tr>
-      <tr><td class="n">실행</td><td>리더암 없이 정책이 팔로워 7축을 직접 움직이며 추종과 레이저 ON/OFF를 함께 수행</td></tr>
+      <tr><td class="n">실행</td><td>리더암 없이 정책이 팔로워 6축과 레이저를 직접 움직이며 추종과 레이저 ON/OFF를 함께 수행</td></tr>
     </tbody>
   </table>
   </div>
 
   <h3>따라 할 때 알아 둘 점</h3>
   <div class="box">
-    <p><b>7축 설정</b>: 학습 도구의 기본 로봇 설정은 모터 6개 기준이라, 관절 6개와 그리퍼로 된 7축 설정(모터 7개 읽기, 캘리브레이션, 리더와 팔로워 짝 맞추기)을 직접 추가했습니다.</p>
+    <p><b>로봇 설정</b>: 학습 도구의 기본 로봇 설정은 저희 로봇과 구성이 달라서, 6축 관절과 엔드이펙터 서보를 읽고 캘리브레이션하고 리더와 팔로워 짝을 맞추는 설정을 직접 추가했습니다.</p>
   </div>
   <div class="box">
     <p><b>레이저를 학습 신호로</b>: 데이터셋의 동작(action)에는 리더 쪽 값이 저장됩니다. 그래서 리더 손잡이 값이 그대로 레이저 채널이 되게 했습니다. 팔로워 쪽은 60에서 켜고 40에서 꺼서 경계값 근처의 깜빡임을 막습니다.</p>
   </div>
   <div class="box">
-    <p><b>시연 규칙</b>: 레이저가 꺼져 있으면 점이 보이지 않아 "점이 용접선에 닿으면 켠다"는 규칙은 따를 수 없습니다. 기준을 토치 위치로 바꿔, 토치가 시작점 위 20mm에 오면 손잡이를 닫고 끝점에서 엽니다.</p>
+    <p><b>시연 규칙</b>: 레이저가 꺼져 있으면 점이 보이지 않아 "점이 용접선에 닿으면 켠다"는 규칙은 따를 수 없습니다. 기준을 토치 위치로 바꿔, 토치가 시작점 위 약 20mm 높이에 오면 손잡이를 닫고 끝점에서 엽니다.</p>
   </div>
   <div class="box gray">
     <p><b>배치 다양화</b>: 시편 위치와 방향을 바꿔 가며 시연해야 배치가 달라져도 대응합니다. 카메라는 회전하지 않는 받침에 고정해, 학습과 실행 때 시점이 같게 합니다.</p>
@@ -230,7 +230,7 @@
     <tbody>
       <tr><td class="n">1</td><td>시편 인식</td><td>시편 위치와 방향 인식 성공</td><td>인식 결과</td></tr>
       <tr><td class="n">2</td><td>시작점 접근</td><td>시작점 위치 오차 5mm 이하</td><td>시작점 위치 오차</td></tr>
-      <tr><td class="n">3</td><td>토치 거리 유지</td><td>TCP와 용접부 거리 20±3mm</td><td>거리 오차</td></tr>
+      <tr><td class="n">3</td><td>토치 거리 유지</td><td>TCP와 용접부 거리 약 20mm 내외(±3mm)</td><td>거리 오차</td></tr>
       <tr><td class="n">4</td><td>레이저 ON</td><td>시작점에서 레이저 ON</td><td>ON 시점과 위치</td></tr>
       <tr><td class="n">5</td><td>용접선 추종</td><td>추종 경로 이탈 5mm 이하, 용접선의 90% 이상이 빨간색으로 바뀜</td><td>추종 위치 오차, 빨간색 비율</td></tr>
       <tr><td class="n">6</td><td>종료점 도달</td><td>종료점 위치 오차 5mm 이하</td><td>종료점 위치 오차</td></tr>

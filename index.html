@@ -2,603 +2,124 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>피지컬 AI 자율용접 매니퓰레이터 | IRC 2026</title>
-<meta name="description" content="2026 IRC 지능로봇대회 매니퓰레이터 종목 피지컬 AI 자율용접 매니퓰레이터 개발 발표">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>7축 용접 로봇 | 2026 IRC 지능로봇대회</title>
 <style>
-/* ===========================================
-   THEME: 현장 다큐
-   검은 강철 바탕, 아크 주황 하나, 보호가스 아크의 푸른빛 하나.
-   반복 모티프는 레이저가 긋는 한 줄인 주황 용접선.
-   =========================================== */
-:root{
-  --stage-bg:#090c0e; --slide-bg:#0E1114;
-  --panel:#1A1F24; --ink:#F2EFEA; --body:#D9D6D0; --muted:#8C949C; --rule:#3A424A;
-  --arc:#FF7A1A; --gas:#4FA3C7;
-  --font:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
-  --ease:cubic-bezier(.16,1,.3,1);
-}
-*{margin:0;padding:0;box-sizing:border-box}
+  html, body { margin: 0; height: 100%; background: #111; overflow: hidden; }
+  body { font-family: -apple-system, "Apple SD Gothic Neo", sans-serif; }
 
-/* ===========================================
-   FIXED 16:9 STAGE (viewport-base.css 전문)
-   =========================================== */
-html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg,#000)}
-.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg,#000)}
-.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--slide-bg,#fff)}
-.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg,#fff)}
-.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1}
-img,video,canvas,svg{max-width:100%;max-height:100%}
-.deck-controls{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000}
-@media print{
-  html,body{width:1920px;height:auto;overflow:visible;background:#fff}
-  .deck-viewport{position:static;overflow:visible;background:#fff}
-  .deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none}
-  .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always}
-  .slide:last-child{break-after:auto;page-break-after:auto}
-  .deck-controls{display:none!important}
-}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important}}
+  /* 16:9 무대를 화면에 맞춰 통째로 축소 */
+  .stage {
+    position: absolute; left: 50%; top: 50%;
+    width: min(100vw, calc(100vh * 16 / 9));
+    aspect-ratio: 16 / 9;
+    transform: translate(-50%, -50%);
+    background: #fff;
+  }
+  .slide {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    visibility: hidden; opacity: 0; transition: opacity .25s;
+    user-select: none; -webkit-user-drag: none;
+  }
+  .slide.active { visibility: visible; opacity: 1; }
 
-/* ===========================================
-   SHARED SLIDE PARTS
-   =========================================== */
-.slide{font-family:var(--font);color:var(--body);font-size:30px;line-height:1.55}
-.pad{position:absolute;inset:96px 120px 88px 120px}
-.mark{position:absolute;left:120px;top:58px;font-size:20px;color:var(--muted);letter-spacing:.02em}
-.mark b{color:var(--arc);font-weight:600}
-.num{position:absolute;right:120px;bottom:44px;font-size:20px;color:var(--muted)}
-.src{position:absolute;left:120px;bottom:44px;font-size:18px;color:var(--muted);max-width:1500px}
-h1,h2{color:var(--ink);font-weight:700;letter-spacing:-.025em;line-height:1.22}
-h2{font-size:62px;margin-bottom:40px;max-width:1500px}
-.hi{color:var(--arc)}
-.gas{color:var(--gas)}
-.weld{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--arc),rgba(255,122,26,0));transform-origin:left}
-.photo{background-size:cover;background-position:center;background-repeat:no-repeat}
-video{display:block;object-fit:cover;background:#000}
-
-/* 화면이 들어올 때 한 번만 차례로 올라온다 */
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
-.slide.visible .reveal{opacity:1;transform:none}
-.slide.visible .r2{transition-delay:.12s}.slide.visible .r3{transition-delay:.24s}.slide.visible .r4{transition-delay:.36s}.slide.visible .r5{transition-delay:.48s}
-.slide.visible .weld.reveal{transform:none}
-.weld.reveal{transform:scaleX(0);opacity:1;transition:transform 1.2s var(--ease)}
-
-/* === 01 COVER === */
-.cover .bg{position:absolute;inset:0}
-.cover .scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(14,17,20,.95) 0%,rgba(14,17,20,.72) 45%,rgba(14,17,20,0) 100%)}
-.cover .kick{position:absolute;left:120px;top:330px;font-size:28px;font-weight:600;color:var(--arc)}
-.cover h1{position:absolute;left:120px;top:390px;font-size:104px;width:1300px}
-.cover .weld{position:absolute;left:120px;top:675px;width:700px}
-.cover .sub{position:absolute;left:120px;top:715px;font-size:40px;color:var(--body)}
-.cover .meta{position:absolute;left:120px;top:800px;font-size:28px;color:var(--body)}
-.cover .meta span{color:var(--muted);margin:0 18px}
-
-/* === 02 SKILL GAP === */
-.gap .ph{position:absolute;left:0;top:0;width:800px;height:1080px}
-.gap .fade{position:absolute;left:620px;top:0;width:180px;height:1080px;background:linear-gradient(90deg,rgba(14,17,20,0),var(--slide-bg))}
-.gap .txt{position:absolute;left:880px;top:150px;width:920px}
-.gap .big{font-size:220px;font-weight:700;color:var(--arc);line-height:1;letter-spacing:-.04em;margin-top:30px}
-.gap .big small{font-size:72px;margin-left:10px;color:var(--ink)}
-.gap .lbl{font-size:30px;margin:10px 0 44px}
-.gap .pts p{border-top:1px solid var(--rule);padding:22px 0;font-size:30px}
-.gap .pts b{color:var(--ink);font-weight:600}
-.gap .mark,.gap .src{left:880px}
-
-/* === 03 OUTDOOR === */
-.duo{display:grid;grid-template-columns:1fr 1fr;gap:60px}
-.duo .ph{height:430px;border-radius:6px}
-.duo h3{font-size:24px;font-weight:600;margin:28px 0 10px}
-.duo p{font-size:32px;color:var(--body)}
-.duo b{color:var(--ink);font-weight:600}
-.take{margin-top:54px;font-size:40px;color:var(--ink)}
-
-/* === 04 REAL WELD === */
-.rail{position:relative;height:60px;margin:10px 0 24px}
-.rail .line{position:absolute;left:0;right:0;top:29px;height:3px;background:var(--arc)}
-.rail .dot{position:absolute;top:10px;width:42px;height:42px;border-radius:50%;border:3px solid var(--arc);background:var(--slide-bg);color:var(--arc);font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.rail .dot.on{background:var(--arc);color:var(--slide-bg)}
-.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
-.strip .ph{height:330px;border-radius:6px}
-.strip h3{font-size:38px;color:var(--ink);margin:26px 0 6px}
-.strip p{font-size:26px;color:var(--muted)}
-.strip .on h3{color:var(--arc)}
-
-/* === 05 POSCO / 06 GOAL: video + side text === */
-.vside{display:grid;gap:56px;height:760px}
-.vside video{width:100%;height:100%;border-radius:6px}
-.side h3{font-size:24px;font-weight:600;color:var(--gas);margin-bottom:12px}
-.side p{font-size:32px;margin-bottom:40px}
-.side b{color:var(--ink);font-weight:600}
-.cmp{width:100%;border-collapse:collapse;font-size:30px}
-.cmp th{text-align:left;font-size:24px;font-weight:600;color:var(--muted);padding:0 0 14px}
-.cmp th.us{color:var(--arc)}
-.cmp td{border-top:1px solid var(--rule);padding:24px 20px 24px 0;vertical-align:top}
-.cmp td:first-child{color:var(--muted);font-size:24px;font-weight:600;width:110px}
-.cmp td.old{color:var(--muted)}
-.cmp td.new{color:var(--ink)}
-
-/* === 07 SCENARIO === */
-.steps7{display:grid;grid-template-columns:repeat(7,1fr);gap:0;margin-top:20px}
-.chev{height:100px;background:var(--panel);clip-path:polygon(0 0,calc(100% - 30px) 0,100% 50%,calc(100% - 30px) 100%,0 100%,30px 50%);display:flex;align-items:center;padding-left:52px;font-size:30px;font-weight:700;color:var(--arc);margin-right:-18px}
-.chev.first{clip-path:polygon(0 0,calc(100% - 30px) 0,100% 50%,calc(100% - 30px) 100%,0 100%);padding-left:28px}
-.chev.on{background:var(--arc);color:var(--slide-bg)}
-.st h3{font-size:34px;color:var(--ink);margin:34px 20px 10px 4px}
-.st.on h3{color:var(--arc)}
-.st p{font-size:25px;color:var(--muted);margin:0 24px 0 4px;line-height:1.5}
-.span7{margin:70px 0 0 calc(100% / 7);border-top:3px solid var(--gas);position:relative;padding-top:26px;font-size:40px;color:var(--ink)}
-.span7::before,.span7::after{content:"";position:absolute;top:-14px;width:3px;height:25px;background:var(--gas)}
-.span7::before{left:0}.span7::after{right:0}
-.span7 b{color:var(--gas)}
-
-/* === 08 LEARNING LOOP === */
-.loop{position:relative;height:640px}
-.node{position:absolute;width:470px;height:200px;background:var(--panel);border-radius:6px;padding:30px 36px}
-.node h3{font-size:36px;color:var(--ink);margin-bottom:12px}
-.node p{font-size:25px;line-height:1.5}
-.node .o{color:var(--arc);font-weight:600}
-.node.dash{background:transparent;border:2px dashed var(--rule)}
-.node.dash h3,.node.dash p{color:var(--muted)}
-.arrow{position:absolute;background:var(--muted)}
-.arrow.h{height:3px}.arrow.v{width:3px}
-.arrow.o{background:var(--arc)}
-.arrow::after{content:"";position:absolute;border:12px solid transparent}
-.arrow.h.r::after{right:-14px;top:-10px;border-left:16px solid var(--muted)}
-.arrow.h.l::after{left:-14px;top:-10px;border-right:16px solid var(--muted)}
-.arrow.v.d::after{bottom:-14px;left:-10px;border-top:16px solid var(--muted)}
-.arrow.v.u::after{top:-14px;left:-10px;border-bottom:16px solid var(--arc)}
-
-/* === 09 END EFFECTOR === */
-.ee{display:grid;grid-template-columns:760px 1fr;gap:80px;align-items:center;height:800px}
-.ee video{width:760px;height:760px;background:#fff;border-radius:6px;object-fit:contain}
-.spec{display:grid;gap:34px}
-.spec .v{font-size:80px;font-weight:700;color:var(--ink);line-height:1;letter-spacing:-.03em}
-.spec .v small{font-size:34px;color:var(--muted);margin-left:8px}
-.spec .v.o{color:var(--arc)}.spec .v.g{color:var(--gas)}
-.spec p{font-size:27px;margin-top:8px}
-
-/* === 10 DEV PROCESS (troubleshooting) === */
-.dev{display:grid;grid-template-columns:1fr 640px;gap:70px}
-.tl{position:relative;padding-left:56px}
-.tl::before{content:"";position:absolute;left:14px;top:12px;bottom:12px;width:3px;background:linear-gradient(var(--gas),var(--arc))}
-.tl li{list-style:none;position:relative;margin-bottom:30px}
-.tl li::before{content:"";position:absolute;left:-52px;top:10px;width:24px;height:24px;border-radius:50%;background:var(--slide-bg);border:3px solid var(--gas)}
-.tl li.now::before{background:var(--arc);border-color:var(--arc)}
-.tl h3{font-size:32px;color:var(--ink);margin-bottom:4px}
-.tl p{font-size:25px;line-height:1.5}
-.tl p b{color:var(--ink);font-weight:600}
-.tl li.now h3{color:var(--arc)}
-.dev figure{background:#fff;border-radius:6px;padding:24px}
-.dev figure img{width:100%;display:block}
-.dev figcaption{font-size:22px;color:var(--muted);margin-top:16px}
-
-/* === 11 PROGRESS === */
-.board{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;height:700px}
-.col{padding:34px 32px;border-radius:6px}
-.col.doing{background:var(--panel)}
-.col h3{font-size:42px;margin-bottom:40px}
-.col p{font-size:31px;margin-bottom:40px;line-height:1.5}
-.col p small{display:block;color:var(--muted);font-size:25px;margin-top:4px}
-.col .o{color:var(--arc)}
-
-/* === 12 SUCCESS === */
-.succ{display:grid;grid-template-columns:620px 1fr;gap:80px}
-.succ .hero{font-size:230px;font-weight:700;line-height:1;color:var(--arc);letter-spacing:-.05em}
-.succ .hero.w{color:var(--ink);font-size:190px;margin-top:40px}
-.succ .hero small{font-size:70px;margin-left:8px}
-.succ .cap{font-size:30px;margin-top:6px}
-.crit{width:100%;border-collapse:collapse;font-size:28px}
-.crit th{text-align:left;color:var(--muted);font-size:24px;font-weight:600;padding:0 0 14px;border-bottom:2px solid var(--muted)}
-.crit td{padding:17px 0;border-bottom:1px solid var(--rule)}
-.crit td:first-child{color:var(--ink);font-weight:600;width:280px}
-.crit tr:last-child td{border-bottom:0}
-.crit .o{color:var(--arc);font-weight:600}
-.note{font-size:22px;color:var(--muted);margin-top:24px}
-
-/* === 13 SCHEDULE === */
-.gantt{display:grid;grid-template-columns:560px repeat(9,1fr);row-gap:0;font-size:28px}
-.gantt .h{font-size:24px;color:var(--muted);text-align:center;padding-bottom:18px;border-bottom:3px solid var(--arc)}
-.gantt .h.l{text-align:left}
-.gantt .h.d{color:var(--arc);font-weight:700}
-.gantt .task{padding:13px 0;border-bottom:1px solid var(--rule);color:var(--ink)}
-.gantt .task small{display:block;color:var(--muted);font-size:21px}
-.gantt .cell{border-bottom:1px solid var(--rule);border-left:1px dashed var(--rule);position:relative}
-.gantt .bar{position:absolute;top:50%;height:26px;transform:translateY(-50%);left:6px;right:6px;border-radius:4px;background:var(--ink)}
-.gantt .bar.o{background:var(--arc)}
-.gantt .bar.dash{background:transparent;border:3px dashed var(--gas)}
-.gantt .ms{position:absolute;top:50%;left:50%;width:30px;height:30px;border-radius:50%;background:var(--arc);transform:translate(-50%,-50%)}
-.legend{display:flex;gap:36px;justify-content:flex-end;font-size:22px;color:var(--muted);margin:-10px 0 16px}
-.legend i{display:inline-block;width:26px;height:16px;border-radius:3px;margin-right:10px;vertical-align:-1px}
-
-/* === 14 CLOSING === */
-.close .bg{position:absolute;inset:0}
-.close .scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(14,17,20,.94) 0%,rgba(14,17,20,.6) 55%,rgba(14,17,20,.1) 100%)}
-.close .kick{position:absolute;left:120px;top:250px;font-size:28px;font-weight:600;color:var(--arc)}
-.close h1{position:absolute;left:120px;top:310px;font-size:100px;width:1400px;line-height:1.25}
-.close .weld{position:absolute;left:120px;top:735px;width:760px;background:linear-gradient(90deg,rgba(255,122,26,0),var(--arc))}
-.close .sub{position:absolute;left:120px;top:780px;font-size:40px}
-
-/* ===========================================
-   CONTROLS (outside the slide design)
-   =========================================== */
-.deck-controls{display:flex;gap:10px;align-items:center;font-family:var(--font);color:#9aa3aa;font-size:14px;opacity:.0;transition:opacity .3s}
-body:hover .deck-controls,.deck-controls:focus-within{opacity:.95}
-.deck-controls button{background:#1A1F24;color:#e6e6e6;border:1px solid #333b42;border-radius:999px;width:38px;height:38px;cursor:pointer;font-size:18px}
-.deck-controls button:focus-visible{outline:2px solid var(--arc);outline-offset:2px}
-.progress{position:fixed;left:0;bottom:0;height:3px;background:var(--arc);z-index:1001;transition:width .4s var(--ease)}
-.edit-hotzone{position:fixed;top:0;left:0;width:80px;height:80px;z-index:10000}
-.edit-toggle{position:fixed;top:16px;left:16px;z-index:10001;opacity:0;pointer-events:none;transition:opacity .2s;background:#1A1F24;color:#fff;border:1px solid #333b42;border-radius:8px;padding:8px 12px;font-family:var(--font);font-size:14px;cursor:pointer}
-.edit-toggle.show,.edit-toggle.active{opacity:1;pointer-events:auto}
-.edit-toggle.active{background:var(--arc);color:#0E1114}
-body.editing [contenteditable="true"]{outline:1px dashed rgba(255,122,26,.6)}
+  .bar {
+    position: fixed; right: 14px; bottom: 10px;
+    color: #bbb; font-size: 13px; display: flex; gap: 10px; align-items: center;
+    opacity: 0; transition: opacity .3s;
+  }
+  body:hover .bar, .bar:focus-within { opacity: 1; }
+  .bar button {
+    background: #222; color: #ddd; border: 1px solid #444; border-radius: 4px;
+    padding: 4px 10px; font-size: 13px; cursor: pointer;
+  }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  @media (prefers-reduced-motion: reduce) { .slide { transition: none; } }
 </style>
 </head>
 <body>
-<div class="deck-viewport">
-<main class="deck-stage" id="deckStage">
-
-<!-- 01 표지 -->
-<section class="slide cover active" data-title="표지">
-  <div class="bg photo" style="background-image:url(deck/img/weld_6.jpg);background-position:62% center"></div>
-  <div class="scrim"></div>
-  <div class="kick reveal">2026 IRC 지능로봇대회 매니퓰레이터 종목</div>
-  <h1 class="reveal r2">피지컬 AI<br>자율용접 매니퓰레이터</h1>
-  <div class="weld reveal r3"></div>
-  <div class="sub reveal r3">숙련자 시연 학습 기반 레이저 가상용접</div>
-  <div class="meta reveal r4">팀장 1명, 한성대학교 학부생 3명<span>|</span>본선 2026년 11월 13일(금)</div>
-  <div class="src">사진: 팀 제공 협동로봇 용접 영상 (2026년 11월)</div>
-</section>
-
-<!-- 02 숙련공 단절 -->
-<section class="slide gap" data-title="숙련 기술 단절">
-  <div class="ph photo" style="background-image:url(deck/img/wm_27.jpg);background-position:40% center"></div>
-  <div class="fade"></div>
-  <div class="mark">01 현장 / 숙련 기술</div>
-  <div class="txt">
-    <h2 class="reveal">숙련 용접공 고령화, 신규 인력 감소</h2>
-    <div class="big reveal r2">50<small>세 이상</small></div>
-    <div class="lbl reveal r2">국내 숙련 용접공의 평균 연령</div>
-    <div class="pts reveal r3">
-      <p>작업자 기량을 따로 시험해 <b>합격자만 투입하는 유일한 공종</b>이고, 그만큼 손기술과 경험에 기대는 암묵지가 많다</p>
-      <p>3D 업종으로 여겨져 <b>청년층 신규 유입이 크게 줄었다</b></p>
-    </div>
-  </div>
-  <div class="src">자료: 팀장 검토 자료　사진: Noah Sudolcan, U.S. Air Force, Public Domain</div>
-  <div class="num">02</div>
-</section>
-
-<!-- 03 야외 현장 -->
-<section class="slide" data-title="야외 현장의 한계">
-  <div class="mark">01 현장 / 자동용접의 한계</div>
-  <div class="pad">
-    <h2 class="reveal">야외 건설현장은 아직 수동용접</h2>
-    <div class="duo reveal r2">
-      <div><div class="ph photo" style="background-image:url(deck/img/factory_robot.jpg)"></div>
-        <h3 style="color:var(--muted)">실내 철골 제작공장</h3><p>교시한 경로를 센서로 보정하며 정형 구조물을 용접한다</p></div>
-      <div><div class="ph photo" style="background-image:url(deck/img/wm_19.jpg);background-position:center 30%"></div>
-        <h3 class="hi">강교량 등 야외 건설현장</h3><p>위치와 방향, 설치 오차, 용접부 형상, 기상이 매번 달라 <b>여전히 수동용접에 의존한다</b></p></div>
-    </div>
-    <p class="take reveal r3">로봇이 스스로 용접 대상을 인지하고 판단하는 <span class="hi">자율용접</span>이 필요하다</p>
-  </div>
-  <div class="src">자료: 팀장 검토 자료　사진: Phasmatisnox, Openverse, CC BY 3.0 / FBenjr123, Wikimedia Commons, CC BY-SA 4.0</div>
-  <div class="num">03</div>
-</section>
-
-<!-- 04 실제 로봇 용접 -->
-<section class="slide" data-title="실제 로봇 용접">
-  <div class="mark">01 현장 / 실제 로봇 용접</div>
-  <div class="pad">
-    <h2 class="reveal">로봇 용접 공정</h2>
-    <div class="rail reveal r2"><div class="line"></div>
-      <div class="dot" style="left:calc(12.5% - 21px)">1</div><div class="dot" style="left:calc(37.5% - 21px)">2</div>
-      <div class="dot on" style="left:calc(62.5% - 21px)">3</div><div class="dot" style="left:calc(87.5% - 21px)">4</div></div>
-    <div class="strip reveal r3">
-      <div><div class="ph photo" style="background-image:url(deck/img/weld_1.jpg)"></div><h3>다가간다</h3><p>T형 필렛 시편으로 접근</p></div>
-      <div><div class="ph photo" style="background-image:url(deck/img/weld_15.jpg)"></div><h3>녹인다</h3><p>아크로 용접선을 따라 용접</p></div>
-      <div class="on"><div class="ph photo" style="background-image:url(deck/img/weld_25.jpg)"></div><h3>확인한다</h3><p>레이저 점으로 용접선 위치 확인</p></div>
-      <div><div class="ph photo" style="background-image:url(deck/img/weld_29.jpg);background-position:center 60%"></div><h3>남긴다</h3><p>완성된 필렛 비드</p></div>
-    </div>
-    <p class="take reveal r4" style="margin-top:46px">대회에서는 아크 대신 <span class="hi">레이저 점</span>으로 이 경로를 그린다</p>
-  </div>
-  <div class="src">영상: 팀 제공 협동로봇 용접 영상 (2026년 11월)</div>
-  <div class="num">04</div>
-</section>
-
-<!-- 05 포스코이앤씨 -->
-<section class="slide" data-title="포스코이앤씨 로봇">
-  <div class="mark">01 현장 / 산업 파트너</div>
-  <div class="pad">
-    <h2 class="reveal">포스코이앤씨 협동로봇 시연</h2>
-    <div class="vside reveal r2" style="grid-template-columns:1150px 1fr;height:640px">
-      <video src="deck/img/posco_clip.mp4" poster="deck/img/posco_58.jpg" muted loop playsinline preload="metadata"></video>
-      <div class="side">
-        <h3>장면</h3><p>전시장 시연,<br>수직으로 세운 H형 강재 이음부</p>
-        <h3 class="hi">우리가 가져올 것</h3><p>자세가 바뀌어도 이음부를 놓치지 않는 판단을, <b>시연 학습으로 만든다</b></p>
-      </div>
-    </div>
-  </div>
-  <div class="src">영상: 팀 제공 전시장 시연 영상 (2026년 11월)</div>
-  <div class="num">05</div>
-</section>
-
-<!-- 06 우리 목표 -->
-<section class="slide" data-title="우리 목표">
-  <div class="mark"><b>02 우리가 만든 것</b></div>
-  <div class="pad">
-    <div class="vside" style="grid-template-columns:1fr 470px;height:890px">
-      <div>
-        <h2 class="reveal">목표: 시연 학습 기반 자율 가상용접</h2>
-        <table class="cmp reveal r2">
-          <tr><th></th><th>기존 자동용접</th><th class="us">이번 연구</th></tr>
-          <tr><td>경로</td><td class="old">교시로 미리 정한다</td><td class="new">숙련자가 리더암으로 보여 준 동작을 <span class="hi">ACT</span>가 학습한다</td></tr>
-          <tr><td>시편</td><td class="old">정해진 자리</td><td class="new">위치와 각도를 바꾼 임의 배치</td></tr>
-          <tr><td>판단</td><td class="old">사람이 시작과 끝을 지정</td><td class="new">로봇이 레이저 ON, 추종, OFF를 스스로 정한다</td></tr>
-        </table>
-        <p class="reveal r3" style="margin-top:40px;font-size:30px"><span class="gas" style="font-weight:700">SO-ARM102</span>　오픈소스 SO-ARM 기반 자체 제작 7축 로봇<br><span style="color:var(--muted);font-size:25px">대회 이후 상용 용접전원과 공정 제어를 붙여 현장용으로 넓힌다</span></p>
-      </div>
-      <video class="reveal r2" src="deck/img/soarm_clip.mp4" poster="deck/img/demo_12.jpg" muted loop playsinline preload="metadata" style="width:470px;height:840px;border-radius:6px"></video>
-    </div>
-  </div>
-  <div class="src" style="left:1330px">10월 27일 레이저 시연</div>
-  <div class="num">06</div>
-</section>
-
-<!-- 07 시나리오 -->
-<section class="slide" data-title="시연 시나리오">
-  <div class="mark">02 우리가 만든 것 / 시연 시나리오</div>
-  <div class="pad">
-    <h2 class="reveal">시연 시나리오</h2>
-    <div class="steps7 reveal r2">
-      <div class="st"><div class="chev first">01</div><h3>시편 배치</h3><p>사람이 필렛 시편을 임의 위치와 각도로 놓는다</p></div>
-      <div class="st"><div class="chev">02</div><h3>시편 인식</h3><p>카메라로 시편과 용접선을 찾는다</p></div>
-      <div class="st"><div class="chev">03</div><h3>시작점 접근</h3><p>토치를 용접선 시작점 위로</p></div>
-      <div class="st"><div class="chev">04</div><h3>토치 거리</h3><p>용접부와 20±3mm(안)</p></div>
-      <div class="st on"><div class="chev on">05</div><h3>레이저 ON</h3><p>그리퍼 서보가 버튼을 누른다</p></div>
-      <div class="st"><div class="chev">06</div><h3>용접선 추종</h3><p>레이저 점이 선을 따라간다</p></div>
-      <div class="st"><div class="chev">07</div><h3>OFF, 복귀</h3><p>끝점에서 끄고 홈 자세로</p></div>
-    </div>
-    <div class="span7 reveal r3"><b>2~7단계</b>를 사람 개입 없이 끝내면 1회 성공</div>
-  </div>
-  <div class="num">07</div>
-</section>
-
-<!-- 08 학습 구조 -->
-<section class="slide" data-title="학습 구조">
-  <div class="mark">02 우리가 만든 것 / 학습 구조</div>
-  <div class="pad">
-    <h2 class="reveal">학습 구조: 그리퍼 채널 = 레이저 ON/OFF</h2>
-    <div class="loop reveal r2">
-      <div class="node" style="left:0;top:20px"><h3>리더암</h3><p>숙련자가 직접 조작<br><span class="o">손잡이 닫힘 = 레이저 ON</span></p></div>
-      <div class="arrow h r" style="left:480px;top:118px;width:60px"></div>
-      <div class="node" style="left:560px;top:20px"><h3>팔로워 <span class="gas">SO-ARM102</span></h3><p>1~6번 관절이 토치를 옮긴다<br><span class="o">7번 그리퍼 서보 = 레이저 버튼</span></p></div>
-      <div class="arrow h r" style="left:1040px;top:118px;width:60px"></div>
-      <div class="node" style="left:1120px;top:20px;width:560px"><h3>데이터셋</h3><p>카메라 영상 2개와 모터 7개 값, 50개 이상<br><span class="o">그리퍼 값 = 레이저 상태 (0, 100)</span></p></div>
-      <div class="arrow v d" style="left:1400px;top:230px;height:110px"></div>
-      <div class="node" style="left:1120px;top:360px;width:560px"><h3>ACT 학습</h3><p>영상과 관절 상태를 보고<br>다음 동작 묶음을 한 번에 예측</p></div>
-      <div class="arrow h l" style="left:1040px;top:458px;width:60px"></div>
-      <div class="node" style="left:560px;top:360px"><h3>실행</h3><p>리더암 없이 팔로워 모터 7개를<br>정책이 직접 움직인다</p></div>
-      <div class="arrow v u o" style="left:795px;top:240px;height:100px"></div>
-      <div class="node dash" style="left:0;top:360px"><h3 style="font-size:28px">대안 (준비 완료)</h3><p>서보가 안 되면 아두이노와<br>릴레이로 버튼 접점을 여닫는다</p></div>
-    </div>
-  </div>
-  <div class="num">08</div>
-</section>
-
-<!-- 09 엔드이펙터 -->
-<section class="slide" data-title="엔드이펙터">
-  <div class="mark">02 우리가 만든 것 / 엔드이펙터</div>
-  <div class="pad" style="top:80px">
-    <div class="ee">
-      <video class="reveal" src="deck/img/ee_turntable.mp4" poster="deck/img/ee_turntable_poster.png" muted loop playsinline preload="metadata"></video>
-      <div>
-        <h2 class="reveal r2" style="font-size:56px">엔드이펙터 v3</h2>
-        <div class="spec reveal r3">
-          <div><div class="v">Ø14 × 88<small>mm</small></div><p>레이저 포인터 실측값, 클램프 링 3개로 고정</p></div>
-          <div><div class="v o">15.9<small>mm</small></div><p>토치 축과 평행한 레이저의 간격, 추종 오차는 레이저 점 기준</p></div>
-          <div><div class="v g">p28</div><p>기존 손목 카메라 마운트와 체결면을 원본 그대로</p></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="src">CAD 모델 360° 회전 (실제 설계 데이터)</div>
-  <div class="num">09</div>
-</section>
-
-<!-- 10 개발 과정 -->
-<section class="slide" data-title="개발 과정">
-  <div class="mark">02 우리가 만든 것 / 개발 과정</div>
-  <div class="pad">
-    <h2 class="reveal">개발 이슈와 조치</h2>
-    <div class="dev">
-      <ol class="tl reveal r2">
-        <li><h3>서보가 버튼에 닿지 않았다</h3><p>원래 자리 서보 축과 버튼 사이 <b>99mm</b>. 서보를 레이저 옆으로 옮기고 레버로 누름</p></li>
-        <li><h3>1차 출력, 레이저가 안 들어갔다</h3><p>버튼이 뒤쪽 링에 걸림 → <b>링에 버튼 홈</b>. 공중에 뜬 받침은 늘어짐 → <b>별도 부품으로 분리</b></p></li>
-        <li><h3>작업판에 부딪혔다</h3><p>와이어 21mm → 5mm로 <b>토치 16mm 단축</b>. 노즐보다 17mm 튀어나와 있던 레이저를 <b>15mm 뒤로</b></p></li>
-        <li class="now"><h3>지금: 모터를 손목 쪽으로</h3><p>모터가 머리에 있으면 어느 쪽이든 닿을 위험. <b>밀대와 꺾임 지렛대</b>로 손목에서 누르는 구조로 바꾸는 중</p></li>
-      </ol>
-      <figure class="reveal r3"><img src="images/laser-setback.jpg" alt="레이저 묶음을 뒤로 물리기 전과 후의 엔드이펙터"><figcaption>왼쪽 전, 오른쪽 후: 이제 맨 앞에는 노즐만 있다</figcaption></figure>
-    </div>
-  </div>
-  <div class="src">전체 기록: gawbi.github.io/irc2026-troubleshooting/log.html</div>
-  <div class="num">10</div>
-</section>
-
-<!-- 11 진행 상황 -->
-<section class="slide" data-title="진행 상황">
-  <div class="mark"><b>03 남은 길</b> / 11월 5일 기준</div>
-  <div class="pad">
-    <h2 class="reveal">진행 현황 (11/5)</h2>
-    <div class="board reveal r2">
-      <div class="col"><h3 class="gas">끝남</h3><p>Isaac Sim OPTi3 원격 조작<small>10월, 저장소 PR 6건</small></p><p>엔드이펙터 설계와 CAD 검사</p><p>레이저 녹화 방식, 릴레이 대안 코드</p></div>
-      <div class="col doing"><h3 class="hi">진행 중</h3><p>토치 부품 재출력<small>16mm 단축, 레이저 15mm 후퇴</small></p><p>모터를 손목 쪽으로<small>밀대와 꺾임 지렛대 설계</small></p></div>
-      <div class="col"><h3 style="color:var(--muted)">시작 전</h3><p>SO-ARM102용 LeRobot 7축 설정</p><p>캘리브레이션, 시연 녹화</p><p>ACT 학습, 반복시험</p></div>
-      <div class="col"><h3 style="color:var(--ink)">확인 필요</h3><p>레이저 버튼이 누르는 동안만 켜지는 방식인지</p><p style="color:var(--muted)">한 번 눌러 켜는 방식이면 릴레이 대안으로 바꾼다</p></div>
-    </div>
-  </div>
-  <div class="num">11</div>
-</section>
-
-<!-- 12 성공 기준 -->
-<section class="slide" data-title="성공 기준">
-  <div class="mark">03 남은 길 / 성공 기준</div>
-  <div class="pad">
-    <h2 class="reveal">성공 기준</h2>
-    <div class="succ">
-      <div class="reveal r2"><div class="hero">90%</div><div class="cap">모든 항목을 통과한 비율 목표</div><div class="hero w">30<small>회 이상</small></div><div class="cap">반복시험 횟수</div></div>
-      <div class="reveal r3">
-        <table class="crit">
-          <tr><th>평가 항목</th><th>판정 기준(안)</th></tr>
-          <tr><td>시편 인식</td><td>시편 위치와 방향을 찾음</td></tr>
-          <tr><td>시작점 접근</td><td>위치 오차 <span class="o">5mm</span> 이하</td></tr>
-          <tr><td>토치 거리 유지</td><td>토치 끝과 용접부 <span class="o">20±3mm</span></td></tr>
-          <tr><td>레이저 ON</td><td>시작점에서 켜짐</td></tr>
-          <tr><td>용접선 추종</td><td>레이저 점 기준 이탈 <span class="o">5mm</span> 이하</td></tr>
-          <tr><td>종료점 도달</td><td>위치 오차 <span class="o">5mm</span> 이하</td></tr>
-          <tr><td>레이저 OFF</td><td>종료점에서 꺼짐</td></tr>
-          <tr><td>홈 자세 복귀</td><td>홈 자세 도달, 전체 작업 시간 기록</td></tr>
-        </table>
-        <p class="note">판정 수치는 팀 협의용 제안 목표값</p>
-      </div>
-    </div>
-  </div>
-  <div class="num">12</div>
-</section>
-
-<!-- 13 일정 -->
-<section class="slide" data-title="일정">
-  <div class="mark">03 남은 길 / 일정(안)</div>
-  <div class="pad">
-    <h2 class="reveal">일정 (11/5~11/13)</h2>
-    <div class="legend reveal r2"><span><i style="background:var(--arc)"></i>진행 중</span><span><i style="background:var(--ink)"></i>예정</span><span><i style="border:3px dashed var(--gas)"></i>보완 여유</span></div>
-    <div class="gantt reveal r2" id="gantt"></div>
-  </div>
-  <div class="num">13</div>
-</section>
-
-<!-- 14 마무리 -->
-<section class="slide close" data-title="마무리">
-  <div class="bg photo" style="background-image:url(deck/img/weld_33.jpg)"></div>
-  <div class="scrim"></div>
-  <div class="kick reveal">우리 팀이 지키려는 한 문장</div>
-  <h1 class="reveal r2">숙련 용접사의 손기술을<br>데이터로 축적하고,<br><span class="hi">피지컬 AI로 계승한다</span></h1>
-  <div class="weld reveal r3"></div>
-  <div class="sub reveal r3">2026년 11월 13일 IRC 본선, 레이저 한 줄로 증명한다</div>
-  <div class="src">사진: 팀 제공 협동로봇 용접 영상 (2026년 11월)</div>
-</section>
-
+<main class="stage" id="stage">
+  <img class="slide" src="deck/final/01.png" alt="2026 IRC 지능로봇대회 매니퓰레이터 종목. 제조 디지털 전환(DX) 7축 용접 로봇. 손태산, 김광빈, 김동희, 왕혜영">
+  <img class="slide" src="deck/final/02.png" alt="목차" loading="lazy">
+  <img class="slide" src="deck/final/03.png" alt="1. 프로젝트 개요" loading="lazy">
+  <img class="slide" src="deck/final/04.png" alt="2. 프로젝트 수행 배경" loading="lazy">
+  <img class="slide" src="deck/final/05.png" alt="3. 프로젝트 수행 필요성" loading="lazy">
+  <img class="slide" src="deck/final/06.png" alt="4. 개발 목표 및 차별성" loading="lazy">
+  <img class="slide" src="deck/final/07.png" alt="5. 개발 대상 및 자율 작업 시나리오" loading="lazy">
+  <img class="slide" src="deck/final/08.png" alt="6. 시스템 구성 및 하드웨어 설계: 자율용접 로봇 시스템 아키텍처" loading="lazy">
+  <img class="slide" src="deck/final/09.png" alt="6. 시스템 구성 및 하드웨어 설계: 하드웨어 설계" loading="lazy">
+  <img class="slide" src="deck/final/10.png" alt="7. 실시간 작업 모니터링" loading="lazy">
+  <img class="slide" src="deck/final/11.png" alt="8. ACT 기반 모방학습 및 자율 제어" loading="lazy">
+  <img class="slide" src="deck/final/12.png" alt="9. 자율 용접 시연" loading="lazy">
+  <img class="slide" src="deck/final/13.png" alt="10. 결론 및 향후 과제" loading="lazy">
+  <img class="slide" src="deck/final/14.png" alt="10. 결론 및 향후 과제: 한계점과 향후 과제" loading="lazy">
 </main>
-</div>
 
-<div class="deck-controls" aria-label="슬라이드 이동">
-  <button type="button" id="prevBtn" aria-label="이전 장">‹</button>
-  <span id="pageNo">1 / 14</span>
-  <button type="button" id="nextBtn" aria-label="다음 장">›</button>
+<div class="bar">
+  <button id="prev" aria-label="이전 장">이전</button>
+  <span id="count" aria-live="polite"></span>
+  <button id="next" aria-label="다음 장">다음</button>
+  <button id="full" aria-label="전체 화면">전체 화면</button>
 </div>
-<div class="progress" id="progress"></div>
-<div class="edit-hotzone" id="editHot"></div>
-<button class="edit-toggle" id="editToggle" type="button" title="편집 모드 (E)">글자 고치기</button>
 
 <script>
-/* ===========================================
-   GANTT: 날짜 칸 9개, 작업 6개 + 본선
-   =========================================== */
-(function(){
-  const days = ['11/5','11/6','11/7','11/8','11/9','11/10','11/11','11/12','11/13'];
-  const rows = [
-    ['토치 부품 재출력, 조립, 버튼 확인','하드웨어',0,2,'o'],
-    ['캘리브레이션, 원격 조작 점검','하드웨어',1,2,''],
-    ['시연 데이터 50개 이상 녹화','데이터와 AI',2,2,''],
-    ['ACT 학습과 추론 시험','데이터와 AI',4,2,''],
-    ['30회 반복시험','제어와 통합, 전원',5,2,''],
-    ['실패 항목 보완, 재학습 여유','전원',7,1,'dash']
-  ];
-  const g = document.getElementById('gantt');
-  const add = (cls, html) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; g.append(d); return d; };
-  add('h l', '할 일');
-  days.forEach((d, i) => add('h' + (i === 8 ? ' d' : ''), d));
-  rows.forEach(([t, who, s, n, k]) => {
-    add('task', `${t}<small>${who}</small>`);
-    for (let i = 0; i < 9; i++) {
-      const c = add('cell', '');
-      if (i === s) { const b = document.createElement('div'); b.className = 'bar ' + k; b.style.right = `calc(${-(n - 1) * 100}% + 6px)`; c.append(b); c.style.zIndex = 2; }
-    }
+  const slides = [...document.querySelectorAll('.slide')];
+  const count = document.getElementById('count');
+  let cur = 0;
+
+  function show(i) {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('active', k === cur));
+    count.textContent = (cur + 1) + ' / ' + slides.length;
+    history.replaceState(null, '', '#' + (cur + 1));
+    // 다음 장 이미지를 미리 받아 둠
+    const nx = slides[cur + 1];
+    if (nx) nx.loading = 'eager';
+  }
+
+  function fromHash() {
+    const n = parseInt(location.hash.slice(1), 10);
+    return Number.isFinite(n) ? n - 1 : 0;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') toggleFull();
   });
-  const last = add('task', '<span class="hi" style="font-weight:700">IRC 본선</span>');
-  last.style.borderBottom = '0';
-  for (let i = 0; i < 9; i++) { const c = add('cell', i === 8 ? '<div class="ms"></div>' : ''); c.style.borderBottom = '0'; }
-})();
 
-/* ===========================================
-   SLIDE PRESENTATION CONTROLLER
-   =========================================== */
-class SlidePresentation {
-  constructor(){
-    this.slides = [...document.querySelectorAll('.slide')];
-    this.stage = document.getElementById('deckStage');
-    this.i = 0; this.lock = false;
-    this.scale(); addEventListener('resize', () => this.scale());
-    addEventListener('keydown', e => {
-      if (document.body.classList.contains('editing')) return;
-      if (['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)) { e.preventDefault(); this.go(this.i + 1); }
-      if (['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) { e.preventDefault(); this.go(this.i - 1); }
-      if (e.key === 'Home') this.go(0); if (e.key === 'End') this.go(this.slides.length - 1);
-    });
-    addEventListener('wheel', e => {
-      if (this.lock || Math.abs(e.deltaY) < 30) return;
-      this.lock = true; setTimeout(() => this.lock = false, 700); this.go(this.i + (e.deltaY > 0 ? 1 : -1));
-    }, {passive:true});
-    let x0 = null;
-    addEventListener('touchstart', e => x0 = e.touches[0].clientX, {passive:true});
-    addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) this.go(this.i + (dx < 0 ? 1 : -1)); x0 = null; });
-    document.getElementById('prevBtn').onclick = () => this.go(this.i - 1);
-    document.getElementById('nextBtn').onclick = () => this.go(this.i + 1);
-    const h = parseInt(location.hash.slice(1), 10);
-    this.go(Number.isFinite(h) ? h - 1 : 0);
-  }
-  scale(){
-    const f = Math.min(innerWidth / 1920, innerHeight / 1080);
-    this.stage.style.transform = `translate(${(innerWidth - 1920 * f) / 2}px, ${(innerHeight - 1080 * f) / 2}px) scale(${f})`;
-  }
-  go(n){
-    this.i = Math.max(0, Math.min(n, this.slides.length - 1));
-    this.slides.forEach((s, k) => {
-      const on = k === this.i;
-      s.classList.toggle('active', on); s.classList.toggle('visible', on);
-      s.querySelectorAll('video').forEach(v => { if (on) { v.play().catch(() => {}); } else { v.pause(); } });
-    });
-    document.getElementById('pageNo').textContent = `${this.i + 1} / ${this.slides.length}`;
-    document.getElementById('progress').style.width = `${(this.i + 1) / this.slides.length * 100}%`;
-    history.replaceState(null, '', '#' + (this.i + 1));
-  }
-}
-new SlidePresentation();
+  let wheelLock = false;
+  document.addEventListener('wheel', e => {
+    if (wheelLock || Math.abs(e.deltaY) < 20) return;
+    wheelLock = true; setTimeout(() => wheelLock = false, 500);
+    show(cur + (e.deltaY > 0 ? 1 : -1));
+  }, { passive: true });
 
-/* ===========================================
-   INLINE EDITING: 왼쪽 위에 마우스를 대거나 E 키
-   고친 글자는 이 브라우저에만 저장된다
-   =========================================== */
-(function(){
-  const btn = document.getElementById('editToggle'), hot = document.getElementById('editHot');
-  const KEY = 'irc2026-deck-edits';
-  const editable = () => document.querySelectorAll('.slide h1, .slide h2, .slide h3, .slide p, .slide td, .slide figcaption, .slide .kick, .slide .sub, .slide .meta');
-  let t = null;
-  hot.addEventListener('mouseenter', () => { clearTimeout(t); btn.classList.add('show'); });
-  hot.addEventListener('mouseleave', () => { t = setTimeout(() => { if (!btn.matches(':hover')) btn.classList.remove('show'); }, 400); });
-  btn.addEventListener('mouseleave', () => { t = setTimeout(() => btn.classList.remove('show'), 400); });
-  try { const saved = JSON.parse(localStorage.getItem(KEY) || '{}'); editable().forEach((el, i) => { if (saved[i] !== undefined) el.innerHTML = saved[i]; }); } catch (e) {}
-  const toggle = () => {
-    const on = !document.body.classList.contains('editing');
-    document.body.classList.toggle('editing', on); btn.classList.toggle('active', on);
-    btn.textContent = on ? '편집 끝내기' : '글자 고치기';
-    editable().forEach(el => el.contentEditable = on ? 'true' : 'false');
-    if (!on) { const out = {}; editable().forEach((el, i) => out[i] = el.innerHTML); try { localStorage.setItem(KEY, JSON.stringify(out)); } catch (e) {} }
-  };
-  btn.addEventListener('click', toggle);
-  addEventListener('keydown', e => { if ((e.key === 'e' || e.key === 'E') && !document.body.classList.contains('editing')) toggle(); });
-})();
+  let tx = null;
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (tx === null) return;
+    const dx = e.changedTouches[0].clientX - tx; tx = null;
+    if (Math.abs(dx) > 40) show(cur + (dx < 0 ? 1 : -1));
+  });
+
+  // 화면 오른쪽 절반을 누르면 다음, 왼쪽 절반은 이전
+  document.getElementById('stage').addEventListener('click', e => {
+    show(cur + (e.clientX > innerWidth / 2 ? 1 : -1));
+  });
+
+  function toggleFull() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.();
+  }
+  document.getElementById('prev').onclick = () => show(cur - 1);
+  document.getElementById('next').onclick = () => show(cur + 1);
+  document.getElementById('full').onclick = toggleFull;
+  addEventListener('hashchange', () => { if (fromHash() !== cur) show(fromHash()); });
+
+  show(fromHash());
 </script>
 </body>
 </html>

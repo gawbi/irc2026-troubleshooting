@@ -1,5 +1,6 @@
 # IRC 2026 피지컬 AI 자율용접
 
+- 프로젝트 소개와 자료 (구성, STL 부품 파일, 학습 방법, 측정 기준): https://gawbi.github.io/irc2026-troubleshooting/project.html
 - 대회 발표 (웹 슬라이드): https://gawbi.github.io/irc2026-troubleshooting/ (방향키, 스페이스, 스와이프로 넘김, F는 전체 화면)
 - 이전 초안 (11/5): https://gawbi.github.io/irc2026-troubleshooting/v1.html
 - 트러블슈팅 기록: https://gawbi.github.io/irc2026-troubleshooting/log.html

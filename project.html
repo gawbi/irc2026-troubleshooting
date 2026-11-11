@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>7축 자율용접 로봇 | 2026 IRC 지능로봇대회</title>
+<meta name="description" content="숙련 용접사의 시연을 ACT 모방학습으로 배우는 7축 자율용접 로봇. 구성, 부품 파일, 학습 방법, 개발 기록.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --blue: #1946CE; --navy: #37445C; --deep: #0A0E48; --ink: #1B1B1B;
+    --panel: #E1E7F7; --gray: #E8EAF0; --line: #C5CBD8; --muted: #6B7489;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #fff; color: var(--ink); font-family: Pretendard, -apple-system, "Apple SD Gothic Neo", sans-serif; line-height: 1.7; word-break: keep-all; }
+  a { color: var(--blue); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+
+  header { background: var(--deep); color: #fff; padding: 56px 0 44px; }
+  header .tag { display: inline-block; background: var(--blue); padding: 2px 12px; font-size: 14px; margin-bottom: 14px; }
+  header h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.25; margin: 0 0 10px; font-weight: 800; }
+  header p { margin: 0; color: #C9D2EE; font-size: 18px; }
+  header .team { margin-top: 18px; font-size: 15px; color: #9EABD6; }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+  .btns a { color: #fff; text-decoration: none; border: 1px solid #5C6BB0; padding: 8px 16px; font-size: 15px; }
+  .btns a.main { background: var(--blue); border-color: var(--blue); }
+
+  nav { position: sticky; top: 0; background: #fff; border-bottom: 1px solid var(--line); z-index: 5; }
+  nav .wrap { display: flex; gap: 18px; overflow-x: auto; white-space: nowrap; padding-top: 10px; padding-bottom: 10px; font-size: 15px; }
+  nav a { color: var(--navy); text-decoration: none; }
+
+  section { padding: 48px 0 8px; }
+  h2 { font-size: 26px; margin: 0 0 6px; color: var(--deep); }
+  h2 small { display: block; font-size: 15px; color: var(--blue); font-weight: 600; margin-bottom: 2px; }
+  h3 { font-size: 19px; margin: 28px 0 8px; color: var(--deep); }
+  .lead { color: var(--navy); margin: 8px 0 18px; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+  figure { margin: 0; }
+  figure img { width: 100%; display: block; background: var(--gray); }
+  figure img.tall { max-height: 460px; object-fit: cover; }
+  figcaption { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+  ol.steps li { counter-increment: s; position: relative; padding: 9px 0 9px 46px; border-bottom: 1px solid #EEF0F5; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 8px; width: 32px; height: 32px; border-radius: 50%; background: var(--panel); color: var(--blue); font-weight: 700; text-align: center; line-height: 32px; }
+  ol.steps b { color: var(--deep); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 8px 0 4px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--panel); color: var(--deep); font-weight: 700; }
+  td.n { white-space: nowrap; color: var(--blue); font-weight: 700; }
+  .scroll { overflow-x: auto; }
+  code { background: var(--gray); padding: 1px 5px; font-size: 14px; }
+
+  .box { background: var(--panel); padding: 18px 20px; margin: 14px 0; }
+  .box.gray { background: var(--gray); }
+  .box p { margin: 4px 0; }
+  ul.plain { margin: 6px 0; padding-left: 20px; }
+
+  footer { margin-top: 56px; padding: 28px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="tag">2026 IRC 지능로봇대회 매니퓰레이터 종목</span>
+    <h1>숙련 용접사의 시연을 배우는<br>7축 자율용접 로봇</h1>
+    <p>숙련 용접사의 기술을 데이터로 축적하고, Physical AI로 계승한다</p>
+    <div class="team">손태산, 김광빈, 김동희, 왕혜영</div>
+    <div class="btns">
+      <a class="main" href="index.html">발표 슬라이드 보기</a>
+      <a href="#parts">부품 파일 내려받기</a>
+      <a href="log.html">트러블슈팅 기록</a>
+    </div>
+  </div>
+</header>
+
+<nav aria-label="목차">
+  <div class="wrap">
+    <a href="#overview">개요</a>
+    <a href="#system">시스템 구성</a>
+    <a href="#parts">하드웨어와 부품</a>
+    <a href="#ee">엔드이펙터 개선</a>
+    <a href="#learn">데이터 수집과 학습</a>
+    <a href="#measure">측정 기준</a>
+    <a href="#limits">한계와 향후 과제</a>
+    <a href="#refs">참고 자료</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section id="overview">
+  <h2><small>01</small>무엇을 만들었나</h2>
+  <div class="two">
+    <figure>
+      <img class="tall" src="project/img/s3_robot.jpg" alt="3D 프린팅한 레이저 일체형 엔드이펙터를 단 자체 제작 로봇 팔" loading="lazy">
+      <figcaption>자체 제작 7축 로봇의 레이저 일체형 엔드이펙터</figcaption>
+    </figure>
+    <div>
+      <p class="lead">숙련 용접공의 고령화로 기술이 끊길 우려가 있고, 기존 교시 기반 자동용접은 작업물 위치가 매번 바뀌는 건설현장에 쓰기 어렵습니다. 그래서 숙련자가 리더암으로 시연한 동작을 ACT 모방학습으로 배워, 임의로 놓인 시편을 스스로 용접하는 로봇을 만들었습니다.</p>
+      <p>실제 아크 대신 레이저 포인터로 토치 끝 위치를 보여 주는 가상 용접으로 검증했습니다. 이번 범위는 수평(X, Y 방향) 접합선입니다.</p>
+    </div>
+  </div>
+
+  <h3>자율 작업 순서</h3>
+  <ol class="steps">
+    <li><b>시편 배치</b>: 작업자가 시편을 임의 위치와 방향에 놓음</li>
+    <li><b>시편 인식</b>: 카메라로 시편과 용접선을 인식</li>
+    <li><b>시작점 접근</b>: 용접 시작점으로 로봇 이동</li>
+    <li><b>토치 거리 확보</b>: 토치와 용접부 거리 20mm</li>
+    <li><b>레이저 ON</b>: 시작점에서 레이저를 켬</li>
+    <li><b>용접선 추종</b>: X, Y 방향 접합선을 따라감</li>
+    <li><b>작업 종료</b>: 레이저 OFF 후 원위치 복귀</li>
+  </ol>
+</section>
+
+<section id="system">
+  <h2><small>02</small>시스템 구성</h2>
+  <figure>
+    <img src="project/img/architecture.png" alt="시스템 구성도. 상단과 손목 카메라 영상이 로컬 PC의 ACT 정책으로 들어가고, 정책의 목표 관절값이 서보 제어를 거쳐 7축 매니퓰레이터로 전달됨. 손 검출 시 정지, 웹 클라이언트로 영상과 상태 전송" loading="lazy">
+  </figure>
+  <ul class="plain">
+    <li>카메라 2대(상단, 손목) 영상이 USB로 로컬 PC에 들어옵니다.</li>
+    <li>ACT 정책이 영상과 현재 관절 위치 q를 받아 다음 목표 관절값 q*를 냅니다.</li>
+    <li>서보 제어부가 USB 시리얼(TTL)로 명령을 보내고 현재 위치를 다시 읽습니다.</li>
+    <li>작업 영역에서 손이 검출되면 정지하고, 손이 빠진 뒤 복귀를 허용합니다.</li>
+    <li>Flask 웹 서비스로 여러 PC의 브라우저에서 영상과 상태를 봅니다.</li>
+  </ul>
+</section>
+
+<section id="parts">
+  <h2><small>03</small>하드웨어와 부품</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>구성</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>매니퓰레이터</td><td>오픈소스 SO-ARM(SO-101) 기반 자체 제작 7축. 관절 6개와 그리퍼, 모터 7개. 리더암과 팔로워암 한 쌍</td></tr>
+      <tr><td>서보</td><td>Feetech STS3215 (SO-101 기본 서보), USB 시리얼 연결</td></tr>
+      <tr><td>엔드이펙터</td><td>1/3 축소 토치와 펜형 레이저 포인터(지름 14mm, 길이 88mm) 일체형, 3D 프린팅</td></tr>
+      <tr><td>레이저 ON/OFF</td><td>그리퍼 채널 서보가 레버로 레이저 버튼을 누름</td></tr>
+      <tr><td>카메라</td><td>2대. 상단(시편 위치와 방향), 손목(용접선 근접 확인)</td></tr>
+      <tr><td>체결</td><td>M3×10 볼트, 육각 너트</td></tr>
+      <tr><td>시편</td><td>3D 프린팅 T자 필릿 2종(길이 181mm, 길이 204mm 두꺼운 판)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>엔드이펙터 출력 파일 (STL)</h3>
+  <p class="lead">현재 출력 세트는 토치 16mm 단축, 레이저 묶음 15mm 후퇴 버전입니다. SO-101 손목에 그대로 체결됩니다.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>번호</th><th>부품</th><th>설명</th></tr></thead>
+    <tbody>
+      <tr><td class="n">01</td><td><a href="project/stl/01_SO101_체결확인용_먼저출력.stl" download>체결 확인용</a></td><td>손목 체결 구멍이 맞는지 먼저 확인하는 작은 부품. 가장 먼저 출력</td></tr>
+      <tr><td class="n">02</td><td><a href="project/stl/02_SO101_카메라체결면유지_베이스.stl" download>베이스</a></td><td>손목 카메라 체결면을 그대로 유지한 토치 받침</td></tr>
+      <tr><td class="n">03</td><td><a href="project/stl/03_OPTi3_축소토치_레이저홀더일체형_단축16_후퇴15.stl" download>토치와 레이저 홀더</a></td><td>1/3 축소 토치와 레이저 홀더 일체형. 토치 16mm 단축, 레이저 15mm 후퇴. 높이 101.3mm</td></tr>
+      <tr><td class="n">04</td><td><a href="project/stl/04_손목카메라_마운트_p28_원본그대로.stl" download>손목 카메라 마운트</a></td><td>SO-ARM 원본 손목 카메라 마운트 그대로</td></tr>
+      <tr><td class="n">05</td><td><a href="project/stl/05_레이저지름_확인게이지.stl" download>레이저 지름 게이지</a></td><td>가진 레이저 포인터가 홀더에 맞는지 확인하는 게이지</td></tr>
+      <tr><td class="n">06</td><td><a href="project/stl/06_서보레버_집게혼결합.stl" download>서보 레버</a></td><td>서보 혼에 끼워 레이저 버튼을 누르는 레버. 끝에 1.2mm 탄성 손가락</td></tr>
+      <tr><td class="n">07</td><td><a href="project/stl/07_서보받침_바닥을판에대고출력.stl" download>서보 받침</a></td><td>서보를 받치는 부품. 처짐을 막으려고 따로 분리함. 바닥을 출력판에 대고 출력</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>설계 검사 결과(부품 겹침, 레버 회전 간섭 등): <a href="project/stl/설계_검수결과.json">설계_검수결과.json</a><br>
+  SO-ARM100 원본 형상을 바탕으로 만들었으며 원본 라이선스(Apache 2.0)를 따릅니다: <a href="project/stl/LICENSE_SO_ARM100.txt">LICENSE_SO_ARM100.txt</a></p>
+</section>
+
+<section id="ee">
+  <h2><small>04</small>엔드이펙터 개선 과정</h2>
+  <div class="two">
+    <figure>
+      <img src="project/img/ee_setback.jpg" alt="레이저 묶음 후퇴 전후 CAD 비교. 왼쪽이 개선 전, 오른쪽이 개선 후" loading="lazy">
+      <figcaption>왼쪽 개선 전, 오른쪽 개선 후. 부품 높이 117.0mm에서 101.3mm</figcaption>
+    </figure>
+    <div>
+      <p class="lead">처음 단 토치형 엔드이펙터는 작업판에 계속 부딪혔습니다. 원인을 하나씩 찾아 고친 과정입니다.</p>
+      <ol class="steps">
+        <li><b>버튼에 닿지 않음</b>: 원래 그리퍼 서보는 레이저 버튼과 99mm 떨어져 있어 서보를 레이저 옆으로 옮기고 레버로 누름</li>
+        <li><b>레이저가 안 들어감</b>: 버튼 돌기가 뒤쪽 링에 걸려 링에 홈을 냄</li>
+        <li><b>서보 받침 처짐</b>: 공중에 뜬 받침을 별도 부품으로 분리</li>
+        <li><b>토치가 판에 닿음</b>: 와이어 돌출 21mm를 5mm로, 토치 16mm 단축</li>
+        <li><b>레이저가 판에 먼저 닿음</b>: 레이저 묶음을 15mm 뒤로 물림</li>
+      </ol>
+    </div>
+  </div>
+  <p>원인, 조치, 검증, 남은 일까지 적은 전체 기록은 <a href="log.html">트러블슈팅 기록</a>에 있습니다.</p>
+</section>
+
+<section id="learn">
+  <h2><small>05</small>데이터 수집과 학습</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>단계</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td class="n">시연</td><td>숙련자가 리더암을 잡고 움직이면 팔로워암이 실시간으로 같은 동작을 함</td></tr>
+      <tr><td class="n">기록</td><td>카메라 2대 영상, 관절 7개 값(레이저 ON/OFF 채널 포함)을 LeRobot 데이터셋으로 저장</td></tr>
+      <tr><td class="n">학습</td><td>LeRobot의 ACT 정책. 영상과 관절 상태를 보고 다음 동작을 묶음(action chunk)으로 예측</td></tr>
+      <tr><td class="n">실행</td><td>리더암 없이 정책이 팔로워 7축을 직접 움직이며 추종과 레이저 ON/OFF를 함께 수행</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>따라 할 때 알아 둘 점</h3>
+  <div class="box">
+    <p><b>7축 설정</b>: LeRobot 기본 <code>so101_follower</code>, <code>so101_leader</code>는 모터 6개 기준이라 그대로는 읽히지 않습니다. LeRobot 서드파티 플러그인(<code>lerobot_robot_*</code> 패키지) 방식으로 7축 로봇 설정을 따로 추가했습니다.</p>
+  </div>
+  <div class="box">
+    <p><b>레이저를 학습 신호로</b>: LeRobot 데이터셋의 action에는 리더 쪽 값이 저장됩니다. 그래서 리더 손잡이 값이 그대로 레이저 채널이 되게 했습니다. 팔로워 쪽은 60에서 켜고 40에서 꺼서 경계값 근처의 깜빡임을 막습니다.</p>
+  </div>
+  <div class="box">
+    <p><b>시연 규칙</b>: 레이저가 꺼져 있으면 점이 보이지 않아 "점이 용접선에 닿으면 켠다"는 규칙은 따를 수 없습니다. 기준을 토치 위치로 바꿔, 토치가 시작점 위 20mm에 오면 손잡이를 닫고 끝점에서 엽니다.</p>
+  </div>
+  <div class="box gray">
+    <p><b>배치 다양화</b>: 시편 위치와 방향을 바꿔 가며 시연해야 배치가 달라져도 대응합니다. 카메라는 회전하지 않는 받침에 고정해, 학습과 실행 때 시점이 같게 합니다.</p>
+  </div>
+</section>
+
+<section id="measure">
+  <h2><small>06</small>측정 기준</h2>
+  <p class="lead">레이저는 토치 축과 평행하게 15.9mm 옆에 달려 있어, 레이저 점도 토치 축에서 15.9mm 옆에 찍힙니다. 그래서 두 값을 다른 기준으로 잽니다.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>항목</th><th>기준</th><th>재는 방법</th></tr></thead>
+    <tbody>
+      <tr><td>토치 끝 거리</td><td>20±3mm</td><td>토치 끝 오프셋을 실측해 관절값으로 계산하고 게이지 블록으로 확인</td></tr>
+      <tr><td>용접선 추종 오차</td><td>경로 이탈 5mm 이하</td><td>레이저 점 기준</td></tr>
+      <tr><td>레이저 ON/OFF</td><td>시작점에서 켜고 종료점에서 끔</td><td>카메라 영상으로 확인</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <!-- 시연 결과(시도 횟수, 성공률, 평균 오차)는 측정 후 여기에 표로 추가 -->
+</section>
+
+<section id="limits">
+  <h2><small>07</small>한계와 향후 과제</h2>
+  <div class="two">
+    <div class="box gray">
+      <p><b>한계</b></p>
+      <ul class="plain">
+        <li>3D 프린팅 시편과 정해진 작업환경에서만 검증해 일반화 성능 검증에 한계</li>
+        <li>레이저 기반 가상 용접이라 실제 용접 품질은 미검증</li>
+        <li>일반 RGB 카메라로는 높이 정보가 부족해 수직(Z 방향) 접합선은 제외</li>
+      </ul>
+    </div>
+    <div class="box">
+      <p><b>향후 과제</b></p>
+      <ul class="plain">
+        <li>다양한 시편과 환경으로 학습 데이터 확대</li>
+        <li>실제 아크 용접 공정 검증</li>
+        <li>깊이 카메라나 카메라 배치 변경으로 수직 접합선까지 확장</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="refs">
+  <h2><small>08</small>참고 자료</h2>
+  <ul class="plain">
+    <li>LeRobot (Hugging Face): <a href="https://github.com/huggingface/lerobot">github.com/huggingface/lerobot</a></li>
+    <li>SO-ARM100, SO-101 (The Robot Studio): <a href="https://github.com/TheRobotStudio/SO-ARM100">github.com/TheRobotStudio/SO-ARM100</a></li>
+    <li>ACT 원 논문: Zhao et al., "Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware", RSS 2023. <a href="https://arxiv.org/abs/2304.13705">arXiv:2304.13705</a></li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    2026 IRC 지능로봇대회 매니퓰레이터 종목 출품작. 손태산, 김광빈, 김동희, 왕혜영<br>
+    <a href="index.html">발표 슬라이드</a> &nbsp; <a href="log.html">트러블슈팅 기록</a> &nbsp; <a href="https://github.com/gawbi/irc2026-troubleshooting/issues/new?template=troubleshooting.yml">문제 제보</a>
+  </div>
+</footer>
+
+</body>
+</html>

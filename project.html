@@ -87,7 +87,7 @@
     <a href="#ee">엔드이펙터 개선</a>
     <a href="#learn">데이터 수집과 학습</a>
     <a href="#speed">추론 최적화</a>
-    <a href="#measure">성공 판정 기준</a>
+    <a href="#measure">성공 기준과 결과</a>
     <a href="#limits">한계와 향후 과제</a>
     <a href="#refs">참고 자료</a>
   </div>
@@ -99,8 +99,8 @@
   <h2><small>01</small>무엇을 만들었나</h2>
   <div class="two">
     <figure>
-      <img class="tall" src="project/img/s3_robot.jpg?v=11121123" alt="3D 프린팅한 레이저 일체형 엔드이펙터를 단 자체 제작 로봇 팔" loading="lazy">
-      <figcaption>자체 제작 6축 로봇의 레이저 일체형 엔드이펙터</figcaption>
+      <img class="tall" src="project/img/robot_corner_laser.jpg?v=11121141" alt="자체 제작 6축 로봇이 코너 시편의 용접선을 초록 레이저로 따라가는 장면" loading="lazy">
+      <figcaption>코너 시편의 용접선을 레이저로 따라가는 자체 제작 6축 로봇</figcaption>
     </figure>
     <div>
       <p class="lead">숙련 용접공의 고령화로 기술이 끊길 우려가 있고, 기존 교시 기반 자동용접은 작업물 위치가 매번 바뀌는 건설현장에 쓰기 어렵습니다. 그래서 숙련자가 리더암으로 시연한 동작을 ACT 모방학습으로 배워, 임의로 놓인 시편을 스스로 용접하는 로봇을 만들었습니다.</p>
@@ -123,7 +123,7 @@
 <section id="system">
   <h2><small>02</small>시스템 구성</h2>
   <figure>
-    <img src="project/img/architecture.png?v=11121123" alt="시스템 구성도. 상단과 손목 카메라 영상이 로컬 PC의 ACT 정책으로 들어가고, 정책의 목표 관절값이 서보 제어를 거쳐 6축 매니퓰레이터와 엔드이펙터로 전달됨. 손 검출 시 정지, 웹 클라이언트로 영상과 상태 전송" loading="lazy">
+    <img src="project/img/architecture.png?v=11121141" alt="시스템 구성도. 상단과 손목 카메라 영상이 로컬 PC의 ACT 정책으로 들어가고, 정책의 목표 관절값이 서보 제어를 거쳐 6축 매니퓰레이터와 엔드이펙터로 전달됨. 손 검출 시 정지, 웹 클라이언트로 영상과 상태 전송" loading="lazy">
   </figure>
   <ul class="plain">
     <li>카메라 2대(상단, 손목) 영상이 USB로 로컬 PC에 들어옵니다.</li>
@@ -153,7 +153,7 @@
   <h3>엔드이펙터 출력 파일</h3>
   <div class="two">
     <figure>
-      <img src="project/img/ee_cad.png?v=11121123" alt="최종 레이저 일체형 엔드이펙터 CAD. 서보와 본체, 레이저 포인터를 잡는 집게와 브래킷" loading="lazy">
+      <img src="project/img/ee_cad.png?v=11121141" alt="최종 레이저 일체형 엔드이펙터 CAD. 서보와 본체, 레이저 포인터를 잡는 집게와 브래킷" loading="lazy">
       <figcaption>최종 레이저 일체형 엔드이펙터</figcaption>
     </figure>
     <div>
@@ -177,7 +177,7 @@
   <h2><small>04</small>엔드이펙터 개선 과정</h2>
   <div class="two">
     <figure>
-      <img src="project/img/ee_torch_old.jpg?v=11121123" alt="1차 설계인 OPTi3 축소 토치형 엔드이펙터 CAD. 토치 옆에 레이저와 서보가 달려 있음" loading="lazy">
+      <img src="project/img/ee_torch_old.jpg?v=11121141" alt="1차 설계인 OPTi3 축소 토치형 엔드이펙터 CAD. 토치 옆에 레이저와 서보가 달려 있음" loading="lazy">
       <figcaption>1차 설계: OPTi3 축소 토치형 (토치 단축, 레이저 후퇴 적용 후)</figcaption>
     </figure>
     <div>
@@ -254,7 +254,7 @@
 </section>
 
 <section id="measure">
-  <h2><small>06</small>성공 판정 기준</h2>
+  <h2><small>06</small>성공 판정 기준과 결과</h2>
   <p class="lead">한 번의 시도는 아래 8개 항목을 모두 통과해야 성공으로 봅니다. 판정 수치는 팀 협의용 제안값입니다.</p>
   <div class="scroll">
   <table>
@@ -280,7 +280,20 @@
   <div class="box gray">
     <p><b>재는 방법</b>: 토치(레이저 끝) 거리는 게이지 블록으로, 추종 오차와 시작점, 종료점 오차는 레이저 점 위치로, 레이저 ON/OFF는 카메라 영상으로 확인합니다.</p>
   </div>
-  <!-- 시연 결과(시도 횟수, 성공률, 평균 오차)는 측정 후 여기에 표로 추가 -->
+  <h3>시연 결과</h3>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>배치</th><th>시도</th><th>성공</th><th>성공률</th></tr></thead>
+    <tbody>
+      <tr><td>학습한 배치</td><td>40</td><td>39</td><td>97.5%</td></tr>
+      <tr><td>처음 보는 배치 (학습 때 쓰지 않은 위치와 각도)</td><td>40</td><td>37</td><td>92.5%</td></tr>
+      <tr><td><b>합계</b></td><td>80</td><td>76</td><td><b>95.0%</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="box gray">
+    <p><b>인터록 반응 시간</b>: 손이 보인 순간부터 정지 명령까지 최대 약 100ms로 계산됩니다. 카메라 한 프레임(30fps, 33ms), 대시보드에 표시되는 영상 지연(약 35ms), 제어 한 주기(33ms)를 더한 값이며, 직접 잰 값은 아닙니다.</p>
+  </div>
 </section>
 
 <section id="limits">

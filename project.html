@@ -99,7 +99,7 @@
   <h2><small>01</small>무엇을 만들었나</h2>
   <div class="two">
     <figure>
-      <img class="tall" src="project/img/robot_corner_laser.jpg?v=11121211" alt="자체 제작 6축 로봇이 코너 시편의 용접선을 초록 레이저로 따라가는 장면" loading="lazy">
+      <img class="tall" src="project/img/robot_corner_laser.jpg?v=11130904" alt="자체 제작 6축 로봇이 코너 시편의 용접선을 초록 레이저로 따라가는 장면" loading="lazy">
       <figcaption>코너 시편의 용접선을 레이저로 따라가는 자체 제작 6축 로봇</figcaption>
     </figure>
     <div>
@@ -123,15 +123,15 @@
 <section id="system">
   <h2><small>02</small>시스템 구성</h2>
   <figure>
-    <img src="project/img/architecture.png?v=11121211" alt="시스템 구성도. 상단 카메라 영상에 YOLO가 용접선을 그려 넣고, 그 영상과 손목 카메라 영상이 ACT 정책으로 들어감. 정책의 목표 관절값이 서보 제어를 거쳐 6축 매니퓰레이터와 엔드이펙터로 전달됨. 손 검출 시 정지, 진행 표시와 영상은 웹 대시보드로 전송" loading="lazy">
+    <img src="project/img/architecture.png?v=11130904" alt="시스템 구성도. 카메라 영상은 V4L2로 캡처해 ZMQ로 나눠 줌. YOLO가 판 종류를 판정해 ACT 정책을 고르고 용접선 끝점을 표시하며, 그 영상과 손목 카메라 영상이 ACT 정책으로 들어감. 정책의 목표 관절값이 서보 제어를 거쳐 6축 매니퓰레이터와 엔드이펙터로 전달됨. 손 검출 시 정지, 진행 표시와 영상은 FastAPI 웹 대시보드로 전송" loading="lazy">
   </figure>
   <ul class="plain">
-    <li>카메라 2대(상단, 손목) 영상이 USB로 로컬 PC에 들어옵니다.</li>
-    <li>YOLO가 상단 카메라 영상에서 용접선을 찾아 영상에 그려 넣습니다.</li>
-    <li>ACT 정책이 이 표시 영상과 손목 영상, 현재 관절 위치 q를 받아 다음 목표 관절값 q*를 냅니다.</li>
+    <li>카메라 2대(상단, 손목) 영상을 V4L2로 직접 캡처해 ZMQ로 여러 프로세스에 나눠 줍니다.</li>
+    <li>YOLO가 상단 카메라 영상에서 판 종류(T판, ㄱ자)를 판정해 쓸 ACT 정책을 고르고, 용접선의 시작점과 끝점을 표시합니다.</li>
+    <li>판 종류에 맞는 ACT 정책이 끝점 표시 영상과 손목 영상, 현재 관절 위치 q를 받아 다음 목표 관절값 q*를 냅니다.</li>
     <li>서보 제어부가 USB 시리얼(TTL)로 명령을 보내고 현재 위치를 다시 읽습니다.</li>
     <li>작업 영역에서 손이 검출되면 정지하고, 손이 빠진 뒤 복귀를 허용합니다.</li>
-    <li>Flask 웹 서비스로 여러 PC의 브라우저에서 영상과 상태를 봅니다.</li>
+    <li>FastAPI 웹 대시보드로 여러 PC의 브라우저에서 영상과 상태를 봅니다.</li>
   </ul>
 </section>
 
@@ -154,7 +154,7 @@
   <h3>엔드이펙터 출력 파일</h3>
   <div class="two">
     <figure>
-      <img src="project/img/ee_cad.png?v=11121211" alt="최종 레이저 일체형 엔드이펙터 CAD. 서보와 본체, 레이저 포인터를 잡는 집게와 브래킷" loading="lazy">
+      <img src="project/img/ee_cad.png?v=11130904" alt="최종 레이저 일체형 엔드이펙터 CAD. 서보와 본체, 레이저 포인터를 잡는 집게와 브래킷" loading="lazy">
       <figcaption>최종 레이저 일체형 엔드이펙터</figcaption>
     </figure>
     <div>
@@ -178,7 +178,7 @@
   <h2><small>04</small>엔드이펙터 개선 과정</h2>
   <div class="two">
     <figure>
-      <img src="project/img/ee_torch_old.jpg?v=11121211" alt="1차 설계인 OPTi3 축소 토치형 엔드이펙터 CAD. 토치 옆에 레이저와 서보가 달려 있음" loading="lazy">
+      <img src="project/img/ee_torch_old.jpg?v=11130904" alt="1차 설계인 OPTi3 축소 토치형 엔드이펙터 CAD. 토치 옆에 레이저와 서보가 달려 있음" loading="lazy">
       <figcaption>1차 설계: OPTi3 축소 토치형 (토치 단축, 레이저 후퇴 적용 후)</figcaption>
     </figure>
     <div>

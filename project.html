@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>6축 자율용접 로봇 | 2026 IRC 지능로봇대회</title>
-<meta name="description" content="숙련 용접사의 시연을 ACT 모방학습으로 배우는 6축 자율용접 로봇. 구성, 부품 파일, 학습 방법, 개발 기록.">
+<title>숙련 용접사 패턴을 모사한 강구조물 용접 로봇 | 2026 IRC 지능로봇대회</title>
+<meta name="description" content="숙련 용접사 패턴을 모사한 강구조물 용접 로봇. 숙련 용접사의 시연을 ACT 모방학습으로 배움. 구성, 부품 파일, 학습 방법, 개발 기록.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root {
@@ -70,7 +70,7 @@
 <header>
   <div class="wrap">
     <span class="tag">2026 IRC 지능로봇대회 매니퓰레이터 종목</span>
-    <h1>숙련 용접사의 시연을 배우는<br>6축 자율용접 로봇</h1>
+    <h1>숙련 용접사 패턴을 모사한<br>강구조물 용접 로봇</h1>
     <p>숙련 용접사의 기술을 데이터로 축적하고, Physical AI로 계승한다</p>
     <div class="team">손태산, 김광빈, 김동희, 왕혜영</div>
     <div class="btns">
@@ -102,7 +102,7 @@
   <h2><small>01</small>무엇을 만들었나</h2>
   <div class="two">
     <figure>
-      <img class="tall" src="project/img/robot_corner_laser.jpg?v=11130955" alt="자체 제작 6축 로봇이 코너 시편의 용접선을 초록 레이저로 따라가는 장면" loading="lazy">
+      <img class="tall" src="project/img/robot_corner_laser.jpg?v=11131055" alt="자체 제작 6축 로봇이 코너 시편의 용접선을 초록 레이저로 따라가는 장면" loading="lazy">
       <figcaption>코너 시편의 용접선을 레이저로 따라가는 자체 제작 6축 로봇</figcaption>
     </figure>
     <div>
@@ -126,7 +126,7 @@
 <section id="system">
   <h2><small>02</small>시스템 구성</h2>
   <figure>
-    <img src="project/img/architecture.png?v=11130955" alt="시스템 구성도. 카메라 영상은 V4L2로 캡처해 ZMQ로 나눠 줌. YOLO가 판 종류를 판정해 ACT 정책을 고르고 용접선 끝점을 표시하며, 그 영상과 손목 카메라 영상이 ACT 정책으로 들어감. 정책의 목표 관절값이 서보 제어를 거쳐 6축 매니퓰레이터와 엔드이펙터로 전달됨. 손 검출 시 정지, 진행 표시와 영상은 FastAPI 웹 대시보드로 전송" loading="lazy">
+    <img src="project/img/architecture.png?v=11131055" alt="시스템 구성도. 카메라 영상은 V4L2로 캡처해 ZMQ로 나눠 줌. YOLO가 판 종류를 판정해 ACT 정책을 고르고 용접선 끝점을 표시하며, 그 영상과 손목 카메라 영상이 ACT 정책으로 들어감. 정책의 목표 관절값이 서보 제어를 거쳐 6축 매니퓰레이터와 엔드이펙터로 전달됨. 손 검출 시 정지, 진행 표시와 영상은 FastAPI 웹 대시보드로 전송" loading="lazy">
   </figure>
   <ul class="plain">
     <li>카메라 2대(상단, 손목) 영상을 V4L2로 직접 캡처해 ZMQ로 여러 프로세스에 나눠 줍니다.</li>
@@ -157,7 +157,7 @@
   <h3>엔드이펙터 출력 파일</h3>
   <div class="two">
     <figure>
-      <img src="project/img/ee_cad.png?v=11130955" alt="최종 레이저 일체형 엔드이펙터 CAD. 서보와 본체, 레이저 포인터를 잡는 집게와 브래킷" loading="lazy">
+      <img src="project/img/ee_cad.png?v=11131055" alt="최종 레이저 일체형 엔드이펙터 CAD. 서보와 본체, 레이저 포인터를 잡는 집게와 브래킷" loading="lazy">
       <figcaption>최종 레이저 일체형 엔드이펙터</figcaption>
     </figure>
     <div>
@@ -181,7 +181,7 @@
   <h2><small>04</small>엔드이펙터 개선 과정</h2>
   <div class="two">
     <figure>
-      <img src="project/img/ee_torch_old.jpg?v=11130955" alt="1차 설계인 OPTi3 축소 토치형 엔드이펙터 CAD. 토치 옆에 레이저와 서보가 달려 있음" loading="lazy">
+      <img src="project/img/ee_torch_old.jpg?v=11131055" alt="1차 설계인 OPTi3 축소 토치형 엔드이펙터 CAD. 토치 옆에 레이저와 서보가 달려 있음" loading="lazy">
       <figcaption>1차 설계: OPTi3 축소 토치형 (토치 단축, 레이저 후퇴 적용 후)</figcaption>
     </figure>
     <div>
@@ -262,26 +262,26 @@
   <p class="lead">임의로 놓은 시편을 로봇이 스스로 찾아 용접선을 따라가는 장면입니다. 휴대폰으로 찍은 영상을 2배속 GIF로 줄였습니다.</p>
   <div class="two">
     <figure>
-      <img src="deck/img/t_demo.gif?v=11130955" alt="T자 필릿 시편 자율용접 시연. 로봇이 일어나 시편에 다가가 초록 레이저로 용접선을 따라감, 2배속" loading="lazy">
+      <img src="deck/img/t_demo.gif?v=11131055" alt="T자 필릿 시편 자율용접 시연. 로봇이 일어나 시편에 다가가 초록 레이저로 용접선을 따라감, 2배속" loading="lazy">
       <figcaption>T자 필릿 시편 (2배속)</figcaption>
     </figure>
     <figure>
-      <img src="deck/img/corner_demo.gif?v=11130955" alt="3면 직각 코너 시편 자율용접 시연. 코너 안쪽 용접선을 초록 레이저로 따라감, 2배속" loading="lazy">
+      <img src="deck/img/corner_demo.gif?v=11131055" alt="3면 직각 코너 시편 자율용접 시연. 코너 안쪽 용접선을 초록 레이저로 따라감, 2배속" loading="lazy">
       <figcaption>3면 직각 코너 시편 (2배속)</figcaption>
     </figure>
   </div>
   <h3>YOLO 용접선 진행 표시 (실제 상단 카메라 화면)</h3>
   <div class="three">
     <figure>
-      <img src="project/img/yolo_before.png?v=11130955" alt="용접 전. 검출된 용접선 전체가 파란색" loading="lazy">
+      <img src="project/img/yolo_before.png?v=11131055" alt="용접 전. 검출된 용접선 전체가 파란색" loading="lazy">
       <figcaption>용접 전: 검출된 용접선 전체가 파란색</figcaption>
     </figure>
     <figure>
-      <img src="deck/img/t_yolo_progress.gif?v=11130955" alt="진행 중. 레이저가 지나간 구간만 빨간색으로 바뀜, 2배속" loading="lazy">
+      <img src="deck/img/t_yolo_progress.gif?v=11131055" alt="진행 중. 레이저가 지나간 구간만 빨간색으로 바뀜, 2배속" loading="lazy">
       <figcaption>진행 중: 레이저가 지나간 구간만 빨간색 (2배속)</figcaption>
     </figure>
     <figure>
-      <img src="project/img/yolo_done.png?v=11130955" alt="완료. 용접선 전 구간이 빨간색" loading="lazy">
+      <img src="project/img/yolo_done.png?v=11131055" alt="완료. 용접선 전 구간이 빨간색" loading="lazy">
       <figcaption>완료: 용접선 전 구간이 빨간색</figcaption>
     </figure>
   </div>
